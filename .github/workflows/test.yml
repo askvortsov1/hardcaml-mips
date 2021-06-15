@@ -25,9 +25,11 @@ jobs:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
 
-      # Runs a single command using the runners shell
       - name: Set up OCaml
-        uses: ocaml/setup-ocaml@v1.1.11
+        uses: ocaml/setup-ocaml@v2
+        
+      - name: Install Deps
+        run: opam install dune core hardcaml hardcaml_waveterm ppx_deriving_hardcaml ppx_expect ppx_jane
         
       - name: Testing
         run: dune runtest
