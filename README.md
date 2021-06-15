@@ -1,6 +1,6 @@
 # Hardcaml MIPS CPU
 
-Hi! We are Sasha Skvortsov and Mayur Deshpande. As a followup to a class project, we are trying to design a simple 5-stage MIPS CPU in OCaml via the [HardCaml](https://github.com/janestreet/hardcaml) library. You can read more about this project at the [CeramicHacker](https://ceramichacker.com/t/hardcaml-mips) blog.
+Hi! We are Sasha Skvortsov and Mayur Deshpande. As a followup to a class project, we are designing a simple 5-stage MIPS CPU in OCaml via the [HardCaml](https://github.com/janestreet/hardcaml) library. You can read more about this project at the [CeramicHacker](https://ceramichacker.com/t/hardcaml-mips) blog.
 
 ## Code Structure
 
