@@ -1,3 +1,4 @@
+open Hardcaml
 open Hardcaml.Signal
 
 module I = struct
@@ -8,4 +9,6 @@ module O = struct
   type 'a t = { pc : 'a [@bits 5] } [@@deriving sexp_of, hardcaml]
 end
 
-let create (i : _ I.t) = { O.pc = (of_string "1111") @: i.suffix }
+let create (scope : Scope.t) (i : _ I.t) = 
+  let instruction_fetch = Instruction_fetch.hierarchical scope {clock = i.clock} in
+  { O.pc = instruction_fetch.instruction.:[3, 0] @: i.suffix }

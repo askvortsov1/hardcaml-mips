@@ -5,7 +5,8 @@ open Mips.Datapath
 module Simulator = Cyclesim.With_interface(I)(O)
 
 let testbench () =
-  let sim = Simulator.create create in
+  let scope = Scope.create ~flatten_design:true () in
+  let sim = Simulator.create (create scope) in
   let waves, sim = Waveform.create sim in
   let inputs = Cyclesim.inputs sim in
   let step ~suffix =
