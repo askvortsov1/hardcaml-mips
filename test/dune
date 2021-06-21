@@ -1,6 +1,9 @@
 (library
  (name test_mips)
- (inline_tests (flags (-verbose)))
- (libraries base hardcaml hardcaml_waveterm hardcaml_mips)
- (preprocess (pps ppx_jane ppx_expect)))
+ (inline_tests
+  (flags (-verbose)))
+ (libraries hardcaml hardcaml_waveterm hardcaml_mips)
+ (preprocess
+  (pps ppx_jane ppx_expect)))
+
 (include_subdirs unqualified)

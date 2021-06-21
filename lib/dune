@@ -1,4 +1,8 @@
-(library (name Mips)
-(public_name hardcaml_mips)
- (preprocess (pps ppx_deriving_hardcaml)))
+(library
+ (name Mips)
+ (public_name hardcaml_mips)
+ (libraries hardcaml)
+ (preprocess
+  (pps ppx_deriving_hardcaml)))
+
 (include_subdirs unqualified)

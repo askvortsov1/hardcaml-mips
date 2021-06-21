@@ -1,3 +1,3 @@
 (executable
  (name main)
- (libraries base hardcaml hardcaml_mips))
+ (libraries hardcaml hardcaml_mips))
