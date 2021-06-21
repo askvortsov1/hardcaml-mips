@@ -1,12 +1,22 @@
 (lang dune 2.8)
+
 (cram enable)
 
-(name hardcaml_mips)
-(version 0.1.0)  ; optional
+(package
+ (name hardcaml_mips)
+ (synopsis "A simple MIPS CPU learning project in Hardcaml."))
+
+(version 0.1.0)
 
 (generate_opam_files true)
 
-(source (github mirage/ocaml-cohttp))
-(license ISC)
-(authors "Anil Madhavapeddy" "Rudi Grinberg")
-(maintainers "team@mirage.org")
+(source
+ (github askvortsov1/hardcaml-mips))
+
+(license MIT)
+
+(authors "Alexander Skvortsov" "Mayur Deshpande")
+
+(maintainers "sasha.skvortsov109@gmail.com")
+
+(homepage "https://ceramichacker.com/blog/category/hardcaml-mips")
