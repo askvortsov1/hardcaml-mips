@@ -9,7 +9,7 @@ module O = struct
   type 'a t = { instruction : 'a [@bits 32] } [@@deriving sexp_of, hardcaml]
 end
 
-let create ~program (scope : Scope.t) (input : _ I.t) =
+let circuit_impl ~program (scope : Scope.t) (input : _ I.t) =
   let r = Reg_spec.create ~clock:input.clock () in
 
   (* Instruction Fetch Stage *)

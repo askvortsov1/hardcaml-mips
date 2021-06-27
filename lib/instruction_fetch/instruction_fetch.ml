@@ -24,11 +24,11 @@ Instead, to keep things simple, we consider the program to be an input to the co
 let instruction_memory program address =
   mux address (Program.to_signals program)
 
-let create ~program (_scope : Scope.t) (i : _ I.t) =
+let circuit_impl ~program (_scope : Scope.t) (i : _ I.t) =
   let address = srl i.pc 2 in
   let instruction = instruction_memory program address in
   { O.next_pc = i.pc +:. 4; O.instruction }
 
 let hierarchical ~program (scope : Scope.t) (input : _ I.t) =
   let module H = Hierarchy.In_scope (I) (O) in
-  H.hierarchical ~scope ~name:"instruction_fetch" (create ~program) input
+  H.hierarchical ~scope ~name:"instruction_fetch" (circuit_impl ~program) input

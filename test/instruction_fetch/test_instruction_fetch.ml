@@ -12,7 +12,7 @@ let program = Mips.Program.create [
 
 let testbench () =
   let scope = Scope.create ~flatten_design:true () in
-  let sim = Simulator.create (Mips.Instruction_fetch.create ~program scope) in
+  let sim = Simulator.create (Mips.Instruction_fetch.circuit_impl ~program scope) in
   let waves, sim = Waveform.create sim in
   let inputs = Cyclesim.inputs sim in
   let step ~pc =

@@ -6,7 +6,7 @@ module Simulator = Cyclesim.With_interface (Mips.Datapath.I) (Mips.Datapath.O)
 
 let testbench () =
   let scope = Scope.create ~flatten_design:true () in
-  let sim = Simulator.create (Mips.Datapath.create ~program:Mips.Program.sample scope) in
+  let sim = Simulator.create (Mips.Datapath.circuit_impl ~program:Mips.Program.sample scope) in
   let waves, sim = Waveform.create sim in
   let step () = Cyclesim.cycle sim in
   step ();
