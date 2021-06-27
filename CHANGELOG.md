@@ -1,6 +1,12 @@
 # Changelog
 
-## [0.2.0](https://github.com/askvortsov1/hardcaml-mips/compare/v0.1.2...v0.2.0)
+## [0.3.0](https://github.com/askvortsov1/hardcaml-mips/compare/v0.2.0...v0.3.0)
+
+- Implemented `instruction_memory`. The program being executed is treated as an input to the entire processor.
+  - See `instruction_fetch.ml` for an explanation of why we implemented instruction memory the way we did.
+- Defined `Program` module to abstract away the concept of a program.
+
+## [0.2.1](https://github.com/askvortsov1/hardcaml-mips/compare/v0.1.2...v0.2.0)
 
 Proof of concept for module hierarchies:
 
