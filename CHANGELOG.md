@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.4.0](https://github.com/askvortsov1/hardcaml-mips/compare/v0.3.0...v0.4.0)
+
+- Implemented feedback in datapath via register. This allows us to store and mutate the state of our system over time.
+  
 ## [0.3.0](https://github.com/askvortsov1/hardcaml-mips/compare/v0.2.0...v0.3.0)
 
 - Implemented `instruction_memory`. The program being executed is treated as an input to the entire processor.
