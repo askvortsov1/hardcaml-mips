@@ -1,6 +1,6 @@
 open Hardcaml
 
-module With_interface (I : Interface.S_Of_signal) (O : Interface.S_Of_signal) =
+module With_interface (I : Interface.S) (O : Interface.S) =
 struct
   let check_widths circuit_impl i =
     I.Of_signal.assert_widths i;
