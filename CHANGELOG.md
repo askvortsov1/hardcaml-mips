@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.5.0](https://github.com/askvortsov1/hardcaml-mips/compare/v0.4.0...v0.5.0)
+## [0.5.1](https://github.com/askvortsov1/hardcaml-mips/compare/v0.4.0...v0.5.1)
 
 - Renamed circuit `create` functions to `circuit_impl`.
 - Created a `Width_check.With_interface` functor with a `check_widths` function that checks input/output width compliance for circuit implementation.
