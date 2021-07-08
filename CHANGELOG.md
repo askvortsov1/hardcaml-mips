@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.4.0](https://github.com/askvortsov1/hardcaml-mips/compare/v0.3.0...v0.4.0)
+## [0.4.1](https://github.com/askvortsov1/hardcaml-mips/compare/v0.3.0...v0.4.1)
 
 - Implemented feedback in datapath via register. This allows us to store and mutate the state of our system over time.
   
