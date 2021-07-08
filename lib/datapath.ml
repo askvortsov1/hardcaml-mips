@@ -14,7 +14,7 @@ let circuit_impl (program : Program.t) (scope : Scope.t) (input : _ I.t) =
 
   (* Instruction Fetch Stage *)
   let pc = wire 32 in
-  let pc_reg = reg_fb ~enable:vdd r ~w:32 (fun d -> d +:. 4) in
+  let pc_reg = reg ~enable:vdd r pc in
   let instruction_fetch =
     Instruction_fetch.hierarchical program scope { pc = pc_reg }
   in
