@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.6.0](https://github.com/askvortsov1/hardcaml-mips/compare/v0.5.2...v0.6.0)
+
+- Added control unit.
+  - Split into [3 components](https://excalidraw.com/#json=4874675947569152,f4jus3Ehk-DGZspiJAGUWw) for maintainability.
+
 ## [0.5.2](https://github.com/askvortsov1/hardcaml-mips/compare/v0.4.0...v0.5.2)
 
 - Renamed circuit `create` functions to `circuit_impl`.
