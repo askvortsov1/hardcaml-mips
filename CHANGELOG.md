@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.7.0](https://github.com/askvortsov1/hardcaml-mips/compare/v0.6.1...v0.7.0)
+
+- Added instruction decode
+  - Includes a 3 part control unit from v0.6.1
+  - Created register file
+- Added instruction execute stage
+  - Created ALU with support for adds and subtracts
+- Added tests for new components
+
 ## [0.6.1](https://github.com/askvortsov1/hardcaml-mips/compare/v0.5.2...v0.6.1)
 
 - Added control unit.

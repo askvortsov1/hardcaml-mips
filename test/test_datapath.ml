@@ -14,7 +14,9 @@ let testbench () =
 
   waves
 
-(* Datapath doesn't increment PC yet, so it won't go to the next instruction for now. *)
+(* Regfile initializes as all 0s and doesn't get written yet,
+ * and we only have add/subtract/lw/sw,
+ * so the output of any ALU op will always be 0. *)
 let%expect_test "general integration test" =
   let waves = testbench () in
   Waveform.print ~wave_width:5 ~display_height:8 waves;
@@ -23,9 +25,9 @@ let%expect_test "general integration test" =
     ┌Signals────────┐┌Waves──────────────────────────────────────────────┐
     │clock          ││┌─────┐     ┌─────┐     ┌─────┐     ┌─────┐     ┌──│
     │               ││      └─────┘     └─────┘     └─────┘     └─────┘  │
-    │               ││────────────┬───────────┬──────────────────────────│
-    │instruction    ││ 012A5820   │012A6020   │00000000                  │
-    │               ││────────────┴───────────┴──────────────────────────│
+    │               ││───────────────────────────────────────────────────│
+    │alu_result     ││ 00000000                                          │
+    │               ││───────────────────────────────────────────────────│
     │               ││                                                   │
     └───────────────┘└───────────────────────────────────────────────────┘
   |}]
