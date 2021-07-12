@@ -163,4 +163,4 @@ let circuit_impl_exn scope input =
 
 let hierarchical scope input =
   let module H = Hierarchy.In_scope (I) (O) in
-  H.hierarchical ~scope ~name:"instruction_fetch" circuit_impl_exn input
+  H.hierarchical ~scope ~name:"control_unit" circuit_impl_exn input
