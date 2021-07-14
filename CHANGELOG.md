@@ -1,8 +1,13 @@
 # Changelog
 
+## [0.8.0](https://github.com/askvortsov1/hardcaml-mips/compare/v0.7.0...v0.8.0)
+
+- Added memory and writeback stages. This completes the basic core of our CPU.
+- Added write support to regfile, made it write-before-read to reduce hazards.
+
 ## [0.7.0](https://github.com/askvortsov1/hardcaml-mips/compare/v0.6.1...v0.7.0)
 
-- Added instruction decode
+- Added instruction decode stage
   - Includes a 3 part control unit from v0.6.1
   - Created register file
 - Added instruction execute stage

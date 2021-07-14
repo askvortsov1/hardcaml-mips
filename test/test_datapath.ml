@@ -14,9 +14,9 @@ let testbench () =
 
   waves
 
-(* Regfile initializes as all 0s and doesn't get written yet,
+(* Regfile initializes as all 0s,
  * and we only have add/subtract/lw/sw,
- * so the output of any ALU op will always be 0. *)
+ * so the output of any writeback will always be 0. *)
 let%expect_test "general integration test" =
   let waves = testbench () in
   Waveform.print ~wave_width:5 ~display_height:8 waves;
@@ -26,7 +26,7 @@ let%expect_test "general integration test" =
     │clock          ││┌─────┐     ┌─────┐     ┌─────┐     ┌─────┐     ┌──│
     │               ││      └─────┘     └─────┘     └─────┘     └─────┘  │
     │               ││───────────────────────────────────────────────────│
-    │alu_result     ││ 00000000                                          │
+    │writeback_data ││ 00000000                                          │
     │               ││───────────────────────────────────────────────────│
     │               ││                                                   │
     └───────────────┘└───────────────────────────────────────────────────┘
