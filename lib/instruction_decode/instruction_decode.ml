@@ -18,7 +18,8 @@ module O = struct
     rs_val : 'a; [@bits 32]
     rt_val : 'a; [@bits 32]
     rdest : 'a; [@bits 5]
-    imm : 'a; [@bits 32]
+    ze_imm : 'a; [@bits 32]
+    alu_imm : 'a; [@bits 32]
   }
   [@@deriving sexp_of, hardcaml]
 end
@@ -53,7 +54,8 @@ let circuit_impl (scope : Scope.t) (input : _ I.t) =
     rs_val;
     rt_val;
     rdest = parsed.rdest;
-    imm = parsed.imm;
+    ze_imm = parsed.ze_imm;
+    alu_imm = parsed.alu_imm;
   }
 
 let circuit_impl_exn scope input =

@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.9.0](https://github.com/askvortsov1/hardcaml-mips/compare/v0.8.0...v0.9.0)
+
+- Added most MIPS instructions
+  - Excluded mult/divide because we don't have hi/lo registers yet
+  - Excluded jump, branch because we don't have next_pc selector logic yet
+  - Excluded system calls / exception handling because we don't have an exception handling unit.
+- Output `pc` in datapath
+- Added some regfile-initializing instructions in the sample program
+- Split `imm` parsed instructions into `ze_imm` (for eventual branching) and `alu_imm` (for ALU ops, is zero or sign extended depending on the instruction)
+
 ## [0.8.0](https://github.com/askvortsov1/hardcaml-mips/compare/v0.7.0...v0.8.0)
 
 - Added memory and writeback stages. This completes the basic core of our CPU.

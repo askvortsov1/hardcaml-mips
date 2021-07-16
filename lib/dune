@@ -3,6 +3,6 @@
  (public_name hardcaml_mips)
  (libraries hardcaml)
  (preprocess
-  (pps ppx_deriving_hardcaml)))
+  (pps ppx_jane ppx_deriving_hardcaml)))
 
 (include_subdirs unqualified)
