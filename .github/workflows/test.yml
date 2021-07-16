@@ -27,6 +27,11 @@ jobs:
 
       - name: Set up OCaml
         uses: ocaml/setup-ocaml@v2
+        with:
+          ocaml-compiler: ocaml-base-compiler.4.10.0
+          opam-repositories: |
+            janestreet-bleeding: https://ocaml.janestreet.com/opam-repository
+            janestreet-bleeding-external: https://github.com/janestreet/opam-repository.git#external-packages
         
       - name: Install Deps
         run: | 
