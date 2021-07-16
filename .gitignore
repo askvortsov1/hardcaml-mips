@@ -1,3 +1,4 @@
 .vscode
 _build
 verilog
+mips_datapath.v

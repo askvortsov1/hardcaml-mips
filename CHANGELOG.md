@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.10.0](https://github.com/askvortsov1/hardcaml-mips/compare/v0.9.0...v0.10.0)
+
+- Outputs verilog code to a separate file, "mips_datapath.v"
+
 ## [0.9.0](https://github.com/askvortsov1/hardcaml-mips/compare/v0.8.0...v0.9.0)
 
 - Added most MIPS instructions
