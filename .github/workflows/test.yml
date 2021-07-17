@@ -51,10 +51,7 @@ jobs:
           eval $(opam env)
         
       - name: Build
-        run: |
-          opam exec -- dune build
-          ./_build/default.main.exe
-        
+        run: opam exec -- dune build
         
       - name: Testing
         run: opam exec -- dune test
