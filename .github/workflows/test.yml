@@ -39,9 +39,13 @@ jobs:
         uses: ocaml/setup-ocaml@v2
         with:
           ocaml-compiler: ${{ matrix.ocaml-compiler }}
-          opam-repositories: |
-            janestreet-bleeding: https://ocaml.janestreet.com/opam-repository
-            janestreet-bleeding-external: https://github.com/janestreet/opam-repository.git#external-packages
+            
+        
+      - name: Set up source repos
+        run: | 
+          opam repo add janestreet-bleeding https://ocaml.janestreet.com/opam-repository
+          opam repo add janestreet-bleeding-external https://github.com/janestreet/opam-repository.git#external-packages
+          eval $(opam env)
         
       - name: Install Deps
         run: | 
