@@ -13,12 +13,21 @@ on:
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
+
+
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   # This workflow contains a single job called "build"
   build:
-    # The type of runner that the job will run on
-    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+        ocaml-compiler:
+          - 4.11.x
+
+    runs-on: ${{ matrix.os }}
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
@@ -27,6 +36,14 @@ jobs:
 
       - name: Set up OCaml
         uses: ocaml/setup-ocaml@v2
+        with:
+          ocaml-compiler: ${{ matrix.ocaml-compiler }}
+            
+      - name: Set up source repos
+        run: | 
+          opam repo add janestreet-bleeding https://ocaml.janestreet.com/opam-repository
+          opam repo add janestreet-bleeding-external https://github.com/janestreet/opam-repository.git#external-packages
+          eval $(opam env)
         
       - name: Install Deps
         run: | 
@@ -35,7 +52,6 @@ jobs:
         
       - name: Build
         run: opam exec -- dune build
-        
         
       - name: Testing
         run: opam exec -- dune test
