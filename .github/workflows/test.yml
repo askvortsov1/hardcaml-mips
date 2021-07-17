@@ -23,7 +23,6 @@ jobs:
       fail-fast: false
       matrix:
         os:
-          - macos-latest
           - ubuntu-latest
         ocaml-compiler:
           - 4.11.x
@@ -40,7 +39,6 @@ jobs:
         with:
           ocaml-compiler: ${{ matrix.ocaml-compiler }}
             
-        
       - name: Set up source repos
         run: | 
           opam repo add janestreet-bleeding https://ocaml.janestreet.com/opam-repository
@@ -53,7 +51,9 @@ jobs:
           eval $(opam env)
         
       - name: Build
-        run: opam exec -- dune build
+        run: |
+          opam exec -- dune build
+          ./_build/default.main.exe
         
         
       - name: Testing
