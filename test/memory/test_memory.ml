@@ -25,7 +25,7 @@ let testbench () =
   step
     ~test:
       { write_enable = "1'h0"; data_address = "32'h9"; write_data = "32'h7" };
-  (* rs_val should now be 8 after this step *)
+  (* alu_a should now be 8 after this step *)
   step
     ~test:
       { write_enable = "1'h0"; data_address = "32'h9"; write_data = "32'h6" };

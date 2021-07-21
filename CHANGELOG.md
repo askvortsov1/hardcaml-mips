@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.11.0] 
+
+- Added a forwarding unit
+  - Forwards values from execute, memory, and writeback
+  - `rs_val` and `rt_val` renamed to `alu_a` and `alu_b` throughout the design.
+- The register file no longer delays writes by half a cycle
+  - Simulating half-cycle operations is [not supported in Hardcaml](https://github.com/janestreet/hardcaml/issues/11).
+
 ## [0.10.0](https://github.com/askvortsov1/hardcaml-mips/compare/v0.9.0...v0.10.0)
 
 - Outputs verilog code to a separate file, "mips_datapath.v"

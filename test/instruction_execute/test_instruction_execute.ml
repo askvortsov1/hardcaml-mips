@@ -12,8 +12,8 @@ let testbench () =
   let step ~sel_shift_for_alu ~sel_imm_for_alu =
     inputs.sel_shift_for_alu := Bits.of_string sel_shift_for_alu;
     inputs.sel_imm_for_alu := Bits.of_string sel_imm_for_alu;
-    inputs.rs_val := Bits.of_string "32'h1";
-    inputs.rt_val := Bits.of_string "32'h2";
+    inputs.alu_a := Bits.of_string "32'h1";
+    inputs.alu_b := Bits.of_string "32'h2";
     inputs.imm := Bits.of_string "32'h183";
     inputs.alu_control :=  Bits.of_constant (Signal.to_constant Mips.Control_unit.Alu_ops.add);
     Cyclesim.cycle sim
@@ -34,16 +34,16 @@ let%expect_test "Uses control selector properly for ALU inputs"
     {|
     ┌Signals───────────┐┌Waves───────────────────────────────────────────────────────────────┐
     │                  ││────────────────────────────────────────                            │
+    │alu_a             ││ 00000001                                                           │
+    │                  ││────────────────────────────────────────                            │
+    │                  ││────────────────────────────────────────                            │
+    │alu_b             ││ 00000002                                                           │
+    │                  ││────────────────────────────────────────                            │
+    │                  ││────────────────────────────────────────                            │
     │alu_control       ││ 02                                                                 │
     │                  ││────────────────────────────────────────                            │
     │                  ││────────────────────────────────────────                            │
     │imm               ││ 00000183                                                           │
-    │                  ││────────────────────────────────────────                            │
-    │                  ││────────────────────────────────────────                            │
-    │rs_val            ││ 00000001                                                           │
-    │                  ││────────────────────────────────────────                            │
-    │                  ││────────────────────────────────────────                            │
-    │rt_val            ││ 00000002                                                           │
     │                  ││────────────────────────────────────────                            │
     │sel_imm_for_alu   ││          ┌─────────┐         ┌─────────                            │
     │                  ││──────────┘         └─────────┘                                     │

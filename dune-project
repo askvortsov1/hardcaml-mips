@@ -6,7 +6,7 @@
  (name hardcaml_mips)
  (synopsis "A simple MIPS CPU learning project in Hardcaml."))
 
-(version 0.10.0)
+(version 0.11.0)
 
 (generate_opam_files true)
 

@@ -8,6 +8,7 @@ end
 module O = struct
   type 'a t = {
     writeback_data : 'a; [@bits 32]
+    instruction : 'a; [@bits 32]
     pc : 'a; [@bits 32]
   }
   [@@deriving sexp_of, hardcaml]
@@ -31,6 +32,10 @@ let circuit_impl (program : Program.t) (scope : Scope.t) (input : _ I.t) =
   let writeback_address_reg = pipeline ~n:3 ~enable:vdd r writeback_address in
   let writeback_data = wire 32 in
   let instruction = reg ~enable:vdd r instruction_fetch.instruction in
+
+  let e_alu_output = wire 32 in
+  let m_alu_output = wire 32 in
+  let m_data_output = wire 32 in
   let instruction_decode =
     Instruction_decode.hierarchical scope
       {
@@ -39,6 +44,10 @@ let circuit_impl (program : Program.t) (scope : Scope.t) (input : _ I.t) =
         writeback_address = writeback_address_reg;
         writeback_data;
         instruction;
+        e_alu_output;
+        m_alu_output;
+        m_data_output;
+        w_output = writeback_data;
       }
   in
   let ctrl_sigs = instruction_decode.control_signals in
@@ -49,8 +58,8 @@ let circuit_impl (program : Program.t) (scope : Scope.t) (input : _ I.t) =
   let sel_shift_for_alu = reg ~enable:vdd r ctrl_sigs.sel_shift_for_alu in
   let sel_imm_for_alu = reg ~enable:vdd r ctrl_sigs.sel_imm_for_alu in
   let alu_control = reg ~enable:vdd r ctrl_sigs.alu_control in
-  let rs_val = reg ~enable:vdd r instruction_decode.rs_val in
-  let rt_val = reg ~enable:vdd r instruction_decode.rt_val in
+  let alu_a = reg ~enable:vdd r instruction_decode.alu_a in
+  let alu_b = reg ~enable:vdd r instruction_decode.alu_b in
   let alu_imm = reg ~enable:vdd r instruction_decode.alu_imm in
   let instruction_execute =
     Instruction_execute.hierarchical scope
@@ -58,17 +67,19 @@ let circuit_impl (program : Program.t) (scope : Scope.t) (input : _ I.t) =
         sel_shift_for_alu;
         sel_imm_for_alu;
         alu_control;
-        rs_val;
-        rt_val;
+        alu_a;
+        alu_b;
         imm = alu_imm;
       }
   in
+  e_alu_output <== instruction_execute.alu_result;
+  m_alu_output <== (reg ~enable:vdd r instruction_execute.alu_result);
 
   (* Memory *)
   let mem_write_enable =
     pipeline ~n:2 ~enable:vdd r ctrl_sigs.mem_write_enable
   in
-  let data = pipeline ~n:2 ~enable:vdd r instruction_decode.rs_val in
+  let data = pipeline ~n:2 ~enable:vdd r instruction_decode.alu_a in
   let memory =
     Memory.hierarchical scope
       {
@@ -78,6 +89,7 @@ let circuit_impl (program : Program.t) (scope : Scope.t) (input : _ I.t) =
         data_address = instruction_execute.alu_result;
       }
   in
+  m_data_output <== memory.data_output;
 
   (* Writeback *)
   let sel_mem_for_reg_data =
@@ -93,7 +105,7 @@ let circuit_impl (program : Program.t) (scope : Scope.t) (input : _ I.t) =
   writeback_data <== writeback.writeback_data;
 
   (* Outputs *)
-  { O.writeback_data = writeback.writeback_data; pc = pc_reg; }
+  { O.writeback_data = writeback.writeback_data; pc = pc_reg; instruction}
 
 let circuit_impl_exn program scope input =
   let module W = Width_check.With_interface (I) (O) in
