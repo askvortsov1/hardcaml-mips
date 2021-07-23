@@ -68,14 +68,14 @@ let circuit_impl (program : Program.t) (scope : Scope.t) (input : _ I.t) =
   let mem_write_enable =
     pipeline ~n:2 ~enable:vdd r ctrl_sigs.mem_write_enable
   in
-  let data_address = pipeline ~n:2 ~enable:vdd r rs_val in
+  let data = pipeline ~n:2 ~enable:vdd r instruction_decode.rs_val in
   let memory =
     Memory.hierarchical scope
       {
         Memory.I.clock = input.clock;
         mem_write_enable;
-        data = instruction_execute.alu_result;
-        data_address;
+        data;
+        data_address = instruction_execute.alu_result;
       }
   in
 
