@@ -35,7 +35,7 @@ let testbench () =
         write_address = "5'h9";
         write_data = "32'h7";
       };
-  (* rs_val should now be 8 after this step *)
+  (* rs_val should now be 6 after this step *)
   step
     ~test:
       {
@@ -53,7 +53,7 @@ let testbench () =
         write_address = "5'h8";
         write_data = "32'h20";
       };
-  (* Now both rs_val and rt_val should have values: 8 and 21 respectively *)
+  (* Now both rs_val and rt_val should have values: 6 and 21 respectively *)
   step
     ~test:
       {
