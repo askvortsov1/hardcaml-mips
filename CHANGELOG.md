@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.11.0] 
+## [0.11.1](https://github.com/askvortsov1/hardcaml-mips/compare/v0.10.0...v0.11.1)
 
 - Added a forwarding unit
   - Forwards values from execute, memory, and writeback
