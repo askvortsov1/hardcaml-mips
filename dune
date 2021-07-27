@@ -1,3 +1,9 @@
 (executable
  (name main)
+ (modules main)
  (libraries hardcaml hardcaml_mips))
+
+(executable
+ (name interactive)
+ (modules interactive)
+ (libraries hardcaml hardcaml_waveterm hardcaml_waveterm.interactive hardcaml_mips))

@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.12.0](https://github.com/askvortsov1/hardcaml-mips/compare/v0.11.1...v0.12.0)
+
+- Use interactive waveform viewer
+
 ## [0.11.1](https://github.com/askvortsov1/hardcaml-mips/compare/v0.10.0...v0.11.1)
 
 - Added a forwarding unit
