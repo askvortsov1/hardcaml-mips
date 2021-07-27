@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.13.0](https://github.com/askvortsov1/hardcaml-mips/compare/v0.12.1...v0.13.0)
+
+Refactor to avoid writeback => decode forwarding
+
+- Instead, support write-before-read in the regfile
+- Also, fix a wiring issue with forwarding
+
 ## [0.12.1](https://github.com/askvortsov1/hardcaml-mips/compare/v0.11.1...v0.12.1)
 
 - Use interactive waveform viewer

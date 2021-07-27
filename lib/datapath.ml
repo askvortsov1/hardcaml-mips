@@ -47,7 +47,6 @@ let circuit_impl (program : Program.t) (scope : Scope.t) (input : _ I.t) =
         e_alu_output;
         m_alu_output;
         m_data_output;
-        w_output = writeback_data;
       }
   in
   let ctrl_sigs = instruction_decode.control_signals in

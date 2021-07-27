@@ -7,7 +7,6 @@ module Data_options = struct
     e_alu_output : 'a; [@bits 32]
     m_alu_output : 'a; [@bits 32]
     m_data_output : 'a; [@bits 32]
-    w_output : 'a; [@bits 32]
   }
   [@@deriving sexp_of, hardcaml]
 end
@@ -18,7 +17,6 @@ module Controls = struct
     m_sel_mem_for_reg_data : 'a;
     e_reg_write_enable : 'a;
     m_reg_write_enable : 'a;
-    w_reg_write_enable : 'a;
   }
   [@@deriving sexp_of, hardcaml]
 end
@@ -30,7 +28,6 @@ module I = struct
     source : 'a; [@bits 5]
     e_dest : 'a; [@bits 5]
     m_dest : 'a; [@bits 5]
-    w_dest : 'a; [@bits 5]
   }
   [@@deriving sexp_of, hardcaml]
 end
@@ -63,11 +60,6 @@ let circuit_impl (_scope : Scope.t) (input : _ I.t) =
           With_valid.valid =
             ctrl.m_reg_write_enable &: (input.source ==: input.m_dest);
           value = opt.m_alu_output;
-        };
-        {
-          With_valid.valid =
-            ctrl.w_reg_write_enable &: (input.source ==: input.w_dest);
-          value = opt.w_output;
         };
       ]
   in

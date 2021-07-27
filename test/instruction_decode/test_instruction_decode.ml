@@ -29,14 +29,6 @@ let testbench tests =
 
   waves
 
-(* We would expect the write changes to be visible on cycles 2 and 4.
- * In the simulation below, we only see them on 3 and 5.
- * This is because Hardcaml's simulator is cycle-accurate: that is,
- * it reads values at the start of each cycle.
- * However, that doesn't account for write-before-reads: writing during the
- * first half of a cycle, and reading during the second.
- * As a result, the evaluated value doesn't account for the new write.
- *)
 let%expect_test "can we read and write to/from reg file properly" =
   let add_rs_9_rt_8_rd_10 = "32'h01285020" in
   let tests =
@@ -98,9 +90,6 @@ let%expect_test "can we read and write to/from reg file properly" =
     │                  ││──────────────────────────────────────────────────                  │
     │m_data_output     ││ 00000000                                                           │
     │                  ││──────────────────────────────────────────────────                  │
-    │                  ││──────────────────────────────────────────────────                  │
-    │w_output          ││ 00000000                                                           │
-    │                  ││──────────────────────────────────────────────────                  │
     │                  ││────────────────────┬───────────────────┬─────────                  │
     │writeback_address ││ 09                 │08                 │00                         │
     │                  ││────────────────────┴───────────────────┴─────────                  │
@@ -109,12 +98,12 @@ let%expect_test "can we read and write to/from reg file properly" =
     │                  ││──────────┴─────────┴─────────┴─────────┴─────────                  │
     │writeback_reg_writ││          ┌─────────┐         ┌─────────┐                           │
     │                  ││──────────┘         └─────────┘         └─────────                  │
-    │                  ││────────────────────┬─────────────────────────────                  │
-    │alu_a             ││ 00000000           │00000006                                       │
-    │                  ││────────────────────┴─────────────────────────────                  │
-    │                  ││────────────────────────────────────────┬─────────                  │
-    │alu_b             ││ 00000000                               │00000021                   │
-    │                  ││────────────────────────────────────────┴─────────                  │
+    │                  ││──────────┬───────────────────────────────────────                  │
+    │alu_a             ││ 00000000 │00000006                                                 │
+    │                  ││──────────┴───────────────────────────────────────                  │
+    │                  ││──────────────────────────────┬───────────────────                  │
+    │alu_b             ││ 00000000                     │00000021                             │
+    │                  ││──────────────────────────────┴───────────────────                  │
     │                  ││──────────────────────────────────────────────────                  │
     │alu_control       ││ 02                                                                 │
     │                  ││──────────────────────────────────────────────────                  │
@@ -142,8 +131,11 @@ let%expect_test "can we read and write to/from reg file properly" =
     │                  ││                                                                    │
     │                  ││                                                                    │
     │                  ││                                                                    │
+    │                  ││                                                                    │
+    │                  ││                                                                    │
+    │                  ││                                                                    │
     └──────────────────┘└────────────────────────────────────────────────────────────────────┘
-    78d48dfc69b486ccfba4fc7add29f561 |}]
+    90138d3163c187a409a08da9d5af1052 |}]
 
 let%expect_test "0 register always returns 0, regardless of actual contents" =
   let add_rs_9_rt_0_rd_8 = "32'h01004820" in
@@ -191,9 +183,6 @@ let%expect_test "0 register always returns 0, regardless of actual contents" =
     │                  ││──────────────────────────────                                      │
     │m_data_output     ││ 00000000                                                           │
     │                  ││──────────────────────────────                                      │
-    │                  ││──────────────────────────────                                      │
-    │w_output          ││ 00000000                                                           │
-    │                  ││──────────────────────────────                                      │
     │                  ││──────────┬─────────┬─────────                                      │
     │writeback_address ││ 00       │08       │00                                             │
     │                  ││──────────┴─────────┴─────────                                      │
@@ -202,9 +191,9 @@ let%expect_test "0 register always returns 0, regardless of actual contents" =
     │                  ││──────────────────────────────                                      │
     │writeback_reg_writ││────────────────────┐                                               │
     │                  ││                    └─────────                                      │
-    │                  ││────────────────────┬─────────                                      │
-    │alu_a             ││ 00000000           │00000007                                       │
-    │                  ││────────────────────┴─────────                                      │
+    │                  ││──────────┬───────────────────                                      │
+    │alu_a             ││ 00000000 │00000007                                                 │
+    │                  ││──────────┴───────────────────                                      │
     │                  ││──────────────────────────────                                      │
     │alu_b             ││ 00000000                                                           │
     │                  ││──────────────────────────────                                      │
@@ -235,5 +224,8 @@ let%expect_test "0 register always returns 0, regardless of actual contents" =
     │                  ││                                                                    │
     │                  ││                                                                    │
     │                  ││                                                                    │
+    │                  ││                                                                    │
+    │                  ││                                                                    │
+    │                  ││                                                                    │
     └──────────────────┘└────────────────────────────────────────────────────────────────────┘
-    a75b59af4e59296a220c1f2f8da856ac |}]
+    a13a60fc1d586e8a19f95d80ac0abc66 |}]

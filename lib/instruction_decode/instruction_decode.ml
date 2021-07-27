@@ -11,7 +11,6 @@ module I = struct
     e_alu_output : 'a; [@bits 32]
     m_alu_output : 'a; [@bits 32]
     m_data_output : 'a; [@bits 32]
-    w_output : 'a; [@bits 32]
   }
   [@@deriving sexp_of, hardcaml]
 end
@@ -28,22 +27,21 @@ module O = struct
   [@@deriving sexp_of, hardcaml]
 end
 
-(* let delay_address_to_falling clock address =
-  let spec = Reg_spec.create ~clock () in
-  let spec_on_falling = Reg_spec.override ~clock_edge:Edge.Falling spec in
-  reg ~enable:vdd spec_on_falling address *)
-
 let regfile rs rt clock write_enable write_address write_data =
   let write_port =
     { write_clock = clock; write_address; write_enable; write_data }
   in
   let number_of_regs = 32 in
-  (* let delay_address = delay_address_to_falling clock in *)
   let regs =
     multiport_memory number_of_regs ~write_ports:[| write_port |]
       ~read_addresses:[| rs; rt |]
   in
-  (Array.get regs 0, Array.get regs 1)
+  let alu_a = 
+      mux2 (write_enable &: (write_address ==: rs)) write_data regs.(0) in
+  let alu_b = 
+      mux2 (write_enable &: (write_address ==: rt)) write_data regs.(1) in
+ 
+  (alu_a, alu_b)
 
 let circuit_impl (scope : Scope.t) (input : _ I.t) =
   let control_unit =
@@ -59,7 +57,6 @@ let circuit_impl (scope : Scope.t) (input : _ I.t) =
   let r = Reg_spec.create ~clock:input.clock () in
   let e_dest = reg ~enable:vdd r parsed.rdest in
   let m_dest = pipeline ~n:2 ~enable:vdd r parsed.rdest in
-  let w_dest = pipeline ~n:3 ~enable:vdd r parsed.rdest in
 
   let m2reg = control_unit.control_signals.sel_mem_for_reg_data in
   let wreg = control_unit.control_signals.reg_write_enable in
@@ -67,7 +64,6 @@ let circuit_impl (scope : Scope.t) (input : _ I.t) =
   let m_sel_mem_for_reg_data = pipeline ~n:2 ~enable:vdd r m2reg in
   let e_reg_write_enable = reg ~enable:vdd r wreg in
   let m_reg_write_enable = pipeline ~n:2 ~enable:vdd r wreg in
-  let w_reg_write_enable = pipeline ~n:3 ~enable:vdd r wreg in
 
   let forwarding_unit_inputs reg reg_value =
     {
@@ -77,7 +73,6 @@ let circuit_impl (scope : Scope.t) (input : _ I.t) =
           e_alu_output = input.e_alu_output;
           m_alu_output = input.m_alu_output;
           m_data_output = input.m_data_output;
-          w_output = input.w_output;
         };
       controls =
         {
@@ -85,12 +80,10 @@ let circuit_impl (scope : Scope.t) (input : _ I.t) =
           m_sel_mem_for_reg_data;
           e_reg_write_enable;
           m_reg_write_enable;
-          w_reg_write_enable;
         };
       source = reg;
       e_dest;
       m_dest;
-      w_dest;
     }
   in
 
@@ -98,7 +91,7 @@ let circuit_impl (scope : Scope.t) (input : _ I.t) =
     Forwarding_unit.hierarchical scope (forwarding_unit_inputs parsed.rs rs_val)
   in
   let fwd_b =
-    Forwarding_unit.hierarchical scope (forwarding_unit_inputs parsed.rs rt_val)
+    Forwarding_unit.hierarchical scope (forwarding_unit_inputs parsed.rt rt_val)
   in
 
   let check_zero_reg reg fwd =
