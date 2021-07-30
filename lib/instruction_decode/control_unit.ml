@@ -120,6 +120,7 @@ module Control_signals = struct
     mem_write_enable : 'a;
     sel_shift_for_alu : 'a;
     sel_imm_for_alu : 'a;
+    stall_pc: 'a;
     alu_control : 'a; [@bits width Alu_ops.default]
   }
   [@@deriving sexp_of, hardcaml]
@@ -286,6 +287,8 @@ let control_core format type_ =
     sel_shift_for_alu;
     sel_imm_for_alu;
     alu_control;
+    (* This will get overriden in `instruction_decode` *)
+    stall_pc = of_string "1'b0";
   }
 
 let circuit_impl (_scope : Scope.t) (input : _ I.t) =

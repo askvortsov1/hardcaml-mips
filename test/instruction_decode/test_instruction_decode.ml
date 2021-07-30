@@ -123,6 +123,8 @@ let%expect_test "can we read and write to/from reg file properly" =
     │                  ││──────────────────────────────────────────────────                  │
     │sel_shift_for_alu ││                                                                    │
     │                  ││──────────────────────────────────────────────────                  │
+    │stall_pc          ││                                                                    │
+    │                  ││──────────────────────────────────────────────────                  │
     │                  ││──────────────────────────────────────────────────                  │
     │ze_imm            ││ 00005020                                                           │
     │                  ││──────────────────────────────────────────────────                  │
@@ -132,13 +134,11 @@ let%expect_test "can we read and write to/from reg file properly" =
     │                  ││                                                                    │
     │                  ││                                                                    │
     │                  ││                                                                    │
-    │                  ││                                                                    │
-    │                  ││                                                                    │
     └──────────────────┘└────────────────────────────────────────────────────────────────────┘
-    90138d3163c187a409a08da9d5af1052 |}]
+    9151ffc80a78ad97d27584fee35350da |}]
 
 let%expect_test "0 register always returns 0, regardless of actual contents" =
-  let add_rs_9_rt_0_rd_8 = "32'h01004820" in
+  let add_rs_9_rt_0_rd_8 = "32'h01204020" in
   let tests =
     [
       (* First, write to the 0 register. rt should still be 0 after this. *)
@@ -152,7 +152,7 @@ let%expect_test "0 register always returns 0, regardless of actual contents" =
       {
         instruction = add_rs_9_rt_0_rd_8;
         write_enable = "1'h1";
-        write_address = "5'h8";
+        write_address = "5'h9";
         write_data = "32'h7";
       };
       {
@@ -175,7 +175,7 @@ let%expect_test "0 register always returns 0, regardless of actual contents" =
     │e_alu_output      ││ 00000000                                                           │
     │                  ││──────────────────────────────                                      │
     │                  ││──────────────────────────────                                      │
-    │instruction       ││ 01004820                                                           │
+    │instruction       ││ 01204020                                                           │
     │                  ││──────────────────────────────                                      │
     │                  ││──────────────────────────────                                      │
     │m_alu_output      ││ 00000000                                                           │
@@ -184,7 +184,7 @@ let%expect_test "0 register always returns 0, regardless of actual contents" =
     │m_data_output     ││ 00000000                                                           │
     │                  ││──────────────────────────────                                      │
     │                  ││──────────┬─────────┬─────────                                      │
-    │writeback_address ││ 00       │08       │00                                             │
+    │writeback_address ││ 00       │09       │00                                             │
     │                  ││──────────┴─────────┴─────────                                      │
     │                  ││──────────────────────────────                                      │
     │writeback_data    ││ 00000007                                                           │
@@ -201,12 +201,12 @@ let%expect_test "0 register always returns 0, regardless of actual contents" =
     │alu_control       ││ 02                                                                 │
     │                  ││──────────────────────────────                                      │
     │                  ││──────────────────────────────                                      │
-    │alu_imm           ││ 00004820                                                           │
+    │alu_imm           ││ 00004020                                                           │
     │                  ││──────────────────────────────                                      │
     │mem_write_enable  ││                                                                    │
     │                  ││──────────────────────────────                                      │
     │                  ││──────────────────────────────                                      │
-    │rdest             ││ 09                                                                 │
+    │rdest             ││ 08                                                                 │
     │                  ││──────────────────────────────                                      │
     │reg_write_enable  ││──────────────────────────────                                      │
     │                  ││                                                                    │
@@ -216,11 +216,11 @@ let%expect_test "0 register always returns 0, regardless of actual contents" =
     │                  ││──────────────────────────────                                      │
     │sel_shift_for_alu ││                                                                    │
     │                  ││──────────────────────────────                                      │
+    │stall_pc          ││                                                                    │
     │                  ││──────────────────────────────                                      │
-    │ze_imm            ││ 00004820                                                           │
     │                  ││──────────────────────────────                                      │
-    │                  ││                                                                    │
-    │                  ││                                                                    │
+    │ze_imm            ││ 00004020                                                           │
+    │                  ││──────────────────────────────                                      │
     │                  ││                                                                    │
     │                  ││                                                                    │
     │                  ││                                                                    │
@@ -228,4 +228,56 @@ let%expect_test "0 register always returns 0, regardless of actual contents" =
     │                  ││                                                                    │
     │                  ││                                                                    │
     └──────────────────┘└────────────────────────────────────────────────────────────────────┘
-    a13a60fc1d586e8a19f95d80ac0abc66 |}]
+    a6f82996ea7f37949d6195a18684553f |}]
+
+let%expect_test "Stalls when appropriate" =
+  let add_rs_9_rt_0_rd_8 = "32'h01204020" in
+  let lw_into_9 = "32'h8D090000" in
+  let lw_into_8 = "32'h8C080000" in
+  let sw_from_8 = "32'hAD0D0000" in
+  let sw_from_9 = "32'hAD2D0000" in
+
+  let no_write =
+    {
+      instruction = "INVALID";
+      write_enable = "1'b0";
+      write_address = "5'h0";
+      write_data = "32'h0";
+    }
+  in
+
+  let tests =
+    [
+      (* Should stall here *)
+      { no_write with instruction = lw_into_9 };
+      { no_write with instruction = add_rs_9_rt_0_rd_8 };
+      (* Shouldn't stall on the first two as no register overlap *)
+      { no_write with instruction = lw_into_8 };
+      { no_write with instruction = add_rs_9_rt_0_rd_8 };
+      (* Should stall again, but this time mem write should be affected *)
+      { no_write with instruction = lw_into_9 };
+      { no_write with instruction = sw_from_9 };
+      (* Shouldn't stall here either, same reason. *)
+      { no_write with instruction = lw_into_9 };
+      { no_write with instruction = sw_from_8 };
+    ]
+  in
+  let waves = testbench tests in
+
+  let display_rules =
+  [ Display_rule.port_name_is_one_of ["stall_pc"; "mem_write_enable"; "reg_write_enable"] ~wave_format:Wave_format.Bit ] in
+  Waveform.expect ~display_rules ~show_digest:true ~wave_width:4 ~display_width:130
+    ~display_height:10 waves;
+  [%expect
+    {|
+    ┌Signals───────────┐┌Waves───────────────────────────────────────────────────────────────────────────────────────────────────────┐
+    │mem_write_enable  ││                                                                      ┌─────────                            │
+    │                  ││──────────────────────────────────────────────────────────────────────┘                                     │
+    │reg_write_enable  ││──────────┐         ┌─────────────────────────────┐         ┌─────────┐                                     │
+    │                  ││          └─────────┘                             └─────────┘         └─────────                            │
+    │stall_pc          ││          ┌─────────┐                             ┌─────────┐                                               │
+    │                  ││──────────┘         └─────────────────────────────┘         └───────────────────                            │
+    │                  ││                                                                                                            │
+    │                  ││                                                                                                            │
+    └──────────────────┘└────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+    54db8e58d702aed6c98c8e61f324a914 |}]

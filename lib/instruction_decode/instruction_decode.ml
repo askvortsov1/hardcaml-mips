@@ -43,6 +43,16 @@ let regfile rs rt clock write_enable write_address write_data =
  
   (alu_a, alu_b)
 
+let stall_signals scope (sigs: _ Control_unit.Control_signals.t) rs rt e_dest e_sel_mem_for_reg_data =
+  let stall_unit = Stall_unit.hierarchical scope {rs; rt; e_dest; e_sel_mem_for_reg_data} in
+  let stall_pc = stall_unit.stall_pc in
+  {
+    sigs with
+    stall_pc;
+    reg_write_enable = mux2 stall_pc gnd sigs.reg_write_enable;
+    mem_write_enable = mux2 stall_pc gnd sigs.mem_write_enable;
+  }
+
 let circuit_impl (scope : Scope.t) (input : _ I.t) =
   let control_unit =
     Control_unit.hierarchical scope { instruction = input.instruction }
@@ -100,9 +110,11 @@ let circuit_impl (scope : Scope.t) (input : _ I.t) =
 
   let alu_a = check_zero_reg parsed.rs fwd_a.forward_data in
   let alu_b = check_zero_reg parsed.rt fwd_b.forward_data in
+  
+  let control_signals = stall_signals scope control_unit.control_signals parsed.rs parsed.rt e_dest e_sel_mem_for_reg_data in
 
   {
-    O.control_signals = control_unit.control_signals;
+    O.control_signals;
     alu_a;
     alu_b;
     rdest = parsed.rdest;

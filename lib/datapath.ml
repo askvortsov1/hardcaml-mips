@@ -19,11 +19,10 @@ let circuit_impl (program : Program.t) (scope : Scope.t) (input : _ I.t) =
 
   (* Instruction Fetch Stage *)
   let pc = wire 32 in
-  let pc_reg = reg ~enable:vdd r pc in
+
   let instruction_fetch =
-    Instruction_fetch.hierarchical program scope { pc = pc_reg }
+    Instruction_fetch.hierarchical program scope { pc }
   in
-  pc <== instruction_fetch.next_pc;
 
   (* Instruction Decode *)
   let reg_write_enable = wire 1 in
@@ -31,7 +30,11 @@ let circuit_impl (program : Program.t) (scope : Scope.t) (input : _ I.t) =
   let writeback_address = wire 5 in
   let writeback_address_reg = pipeline ~n:3 ~enable:vdd r writeback_address in
   let writeback_data = wire 32 in
-  let instruction = reg ~enable:vdd r instruction_fetch.instruction in
+
+  let prev_stall_pc = wire 1 in
+  let prev_instruction = pipeline ~n:2 ~enable:vdd r instruction_fetch.instruction in
+  let curr_instruction = reg ~enable:vdd r instruction_fetch.instruction in
+  let instruction = mux2 prev_stall_pc prev_instruction curr_instruction in
 
   let e_alu_output = wire 32 in
   let m_alu_output = wire 32 in
@@ -52,6 +55,10 @@ let circuit_impl (program : Program.t) (scope : Scope.t) (input : _ I.t) =
   let ctrl_sigs = instruction_decode.control_signals in
   reg_write_enable <== ctrl_sigs.reg_write_enable;
   writeback_address <== instruction_decode.rdest;
+
+  let pc_reg = reg ~enable:vdd r (mux2 ctrl_sigs.stall_pc pc (pc +:. 4)) in
+  pc <== pc_reg;
+  prev_stall_pc <== reg ~enable:vdd r ctrl_sigs.stall_pc;
 
   (* Instruction Execute *)
   let sel_shift_for_alu = reg ~enable:vdd r ctrl_sigs.sel_shift_for_alu in

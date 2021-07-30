@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.14.0](https://github.com/askvortsov1/hardcaml-mips/compare/v0.13.0...v0.14.0)
+
+- Added stalls
+  - We stall if there's a LW in Execute, and we need to forward Execute => Decode
+  - This is needed because LW data isn't available for forwarding until the Memory stage
+- Also moved "next PC" logic out of "instruction fetch": this will be its own module in a coming release.
+
 ## [0.13.0](https://github.com/askvortsov1/hardcaml-mips/compare/v0.12.1...v0.13.0)
 
 Refactor to avoid writeback => decode forwarding

@@ -6,7 +6,7 @@ module I = struct
 end
 
 module O = struct
-  type 'a t = { instruction : 'a; [@bits 32] next_pc : 'a [@bits 32] }
+  type 'a t = { instruction : 'a; [@bits 32] }
   [@@deriving sexp_of, hardcaml]
 end
 
@@ -30,7 +30,7 @@ let instruction_memory program address =
 let circuit_impl (program : Program.t) (_scope : Scope.t) (input : _ I.t) =
   let address = srl input.pc 2 in
   let instruction = instruction_memory program address in
-  { O.next_pc = input.pc +:. 4; O.instruction }
+  { O.instruction }
 
 let circuit_impl_exn program scope input =
   let module W = Width_check.With_interface (I) (O) in
