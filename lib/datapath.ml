@@ -56,7 +56,18 @@ let circuit_impl (program : Program.t) (scope : Scope.t) (input : _ I.t) =
   reg_write_enable <== ctrl_sigs.reg_write_enable;
   writeback_address <== instruction_decode.rdest;
 
-  let pc_reg = reg ~enable:vdd r (mux2 ctrl_sigs.stall_pc pc (pc +:. 4)) in
+
+  let gen_next_pc = Gen_next_pc.hierarchical scope {
+    Gen_next_pc.I.alu_a = instruction_decode.alu_a;
+    alu_b = instruction_decode.alu_b;
+    addr = instruction_decode.addr;
+    se_imm = instruction_decode.se_imm;
+    pc = pc;
+    prev_pc = reg ~enable:vdd r pc;
+    pc_sel = ctrl_sigs.pc_sel;
+  } in
+
+  let pc_reg = reg ~enable:vdd r (mux2 ctrl_sigs.stall_pc pc gen_next_pc.next_pc) in
   pc <== pc_reg;
   prev_stall_pc <== reg ~enable:vdd r ctrl_sigs.stall_pc;
 
@@ -67,15 +78,18 @@ let circuit_impl (program : Program.t) (scope : Scope.t) (input : _ I.t) =
   let alu_a = reg ~enable:vdd r instruction_decode.alu_a in
   let alu_b = reg ~enable:vdd r instruction_decode.alu_b in
   let alu_imm = reg ~enable:vdd r instruction_decode.alu_imm in
+  let jal = reg ~enable:vdd r ctrl_sigs.jal in
   let instruction_execute =
     Instruction_execute.hierarchical scope
       {
-        sel_shift_for_alu;
-        sel_imm_for_alu;
-        alu_control;
         alu_a;
         alu_b;
         imm = alu_imm;
+        sel_shift_for_alu;
+        sel_imm_for_alu;
+        alu_control;
+        jal;
+        prev2_pc = pipeline ~n:2 ~enable:vdd r pc;
       }
   in
   e_alu_output <== instruction_execute.alu_result;
@@ -85,14 +99,15 @@ let circuit_impl (program : Program.t) (scope : Scope.t) (input : _ I.t) =
   let mem_write_enable =
     pipeline ~n:2 ~enable:vdd r ctrl_sigs.mem_write_enable
   in
-  let data = pipeline ~n:2 ~enable:vdd r instruction_decode.alu_a in
+  let data = pipeline ~n:2 ~enable:vdd r instruction_decode.alu_b in
+  let data_address = reg ~enable:vdd r instruction_execute.alu_result in
   let memory =
     Memory.hierarchical scope
       {
         Memory.I.clock = input.clock;
         mem_write_enable;
         data;
-        data_address = instruction_execute.alu_result;
+        data_address;
       }
   in
   m_data_output <== memory.data_output;

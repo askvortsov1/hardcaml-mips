@@ -7,6 +7,8 @@ module Instruction_format = struct
   let r_type = of_string "2'h1"
 
   let i_type = of_string "2'h2"
+
+  let j_type = of_string "2'h3"
 end
 
 module Instruction_type = struct
@@ -63,10 +65,25 @@ module Instruction_type = struct
 
   let sltiu = of_int ~width:7 53
 
+
   (* Memory *)
   let lw = of_int ~width:7 60
 
   let sw = of_int ~width:7 61
+
+  (* Jump *)
+
+  let j = of_int ~width:7 70
+
+  let jr = of_int ~width:7 71
+
+  let jal = of_int ~width:7 72
+
+  (* Branch *)
+
+  let bne = of_int ~width:7 80
+
+  let beq = of_int ~width:7 81
 end
 
 module Alu_ops = struct
@@ -101,14 +118,29 @@ module Alu_ops = struct
   let xor = of_int ~width:5 14
 end
 
+module Pc_sel = struct
+  module Enum = struct
+    type t = 
+    | Pc_incr
+    | Jump_addr
+    | Jump_reg
+    | Branch_eq
+    | Branch_neq
+    [@@deriving sexp_of, compare, enumerate]
+  end
+
+  include Interface.Make_enums(Enum)
+end
+
 module Parsed_instruction = struct
   type 'a t = {
     rs : 'a; [@bits 5]
     rt : 'a; [@bits 5]
     rdest : 'a; [@bits 5]
     shamt : 'a; [@bits 5]
-    ze_imm : 'a; [@bits 32]
+    se_imm : 'a; [@bits 32]
     alu_imm : 'a; [@bits 32]
+    addr: 'a; [@bits 26]
   }
   [@@deriving sexp_of, hardcaml]
 end
@@ -121,7 +153,9 @@ module Control_signals = struct
     sel_shift_for_alu : 'a;
     sel_imm_for_alu : 'a;
     stall_pc: 'a;
+    jal: 'a;
     alu_control : 'a; [@bits width Alu_ops.default]
+    pc_sel: 'a Pc_sel.Binary.t;
   }
   [@@deriving sexp_of, hardcaml]
 end
@@ -159,9 +193,10 @@ let rtype_classifier instr =
             (of_string "6'b000000", [ type_ <-- T.sll ]);
             (of_string "6'b000010", [ type_ <-- T.srl ]);
             (of_string "6'b000011", [ type_ <-- T.sra ]);
-            (of_string "6'b100100", [ type_ <-- T.sllv ]);
+            (of_string "6'b000100", [ type_ <-- T.sllv ]);
             (of_string "6'b000110", [ type_ <-- T.srlv ]);
             (of_string "6'b000111", [ type_ <-- T.srav ]);
+            (of_string "6'b001000", [ type_ <-- T.jr ]);
           ];
       ]);
   Always.Variable.value type_
@@ -189,14 +224,30 @@ let classifier instr =
             (of_string "6'b001011", [ format <-- F.i_type; type_ <-- T.sltiu ]);
             (of_string "6'b100011", [ format <-- F.i_type; type_ <-- T.lw ]);
             (of_string "6'b101011", [ format <-- F.i_type; type_ <-- T.sw ]);
+            (of_string "6'b000010", [ format <-- F.j_type;  type_ <-- T.j]);
+            (of_string "6'b000011", [ format <-- F.j_type;  type_ <-- T.jal]);
+            (of_string "6'b000101", [ format <-- F.j_type;  type_ <-- T.bne]);
+            (of_string "6'b000100", [ format <-- F.j_type;  type_ <-- T.beq]);
+
           ];
       ]);
   (Always.Variable.value format, Always.Variable.value type_)
 
+
 let parser instr format type_ =
   let rt = instr.:[(20, 16)] in
   let rd = instr.:[(15, 11)] in
-  let rdest = mux2 (format ==: Instruction_format.r_type) rd rt in
+  let rdest = priority_select_with_default ~default:rd 
+  [
+    {
+      With_valid.valid = type_ ==: Instruction_type.jal;
+      value = of_string "5'd31";
+    };
+    {
+      With_valid.valid = format ==: Instruction_format.i_type;
+      value = rt;
+    };
+  ] in
   let ze_imm = uresize instr.:[(15, 0)] 32 in
   let se_imm = sresize instr.:[(15, 0)] 32 in
   let use_ze_for_imm =
@@ -207,6 +258,9 @@ let parser instr format type_ =
     |: (type_ ==: Instruction_type.andi)
     |: (type_ ==: Instruction_type.ori)
     |: (type_ ==: Instruction_type.xori)
+    |: (type_ ==: Instruction_type.sll)
+    |: (type_ ==: Instruction_type.srl)
+    |: (type_ ==: Instruction_type.sra)
   in
   let alu_imm = mux2 use_ze_for_imm ze_imm se_imm in
   let module P = Parsed_instruction in
@@ -215,8 +269,9 @@ let parser instr format type_ =
     rt;
     rdest;
     shamt = instr.:[(10, 6)];
-    ze_imm;
+    se_imm;
     alu_imm;
+    addr = instr.:[(25, 0)];
   }
 
 let type_to_alu_control type_ =
@@ -259,18 +314,49 @@ let type_to_alu_control type_ =
             (* Memory *)
             (T.lw, [ aluc <-- O.add ]);
             (T.sw, [ aluc <-- O.add ]);
+            (* Jump *)
+            (T.j, [ aluc <-- O.noop ]);
+            (T.jal, [ aluc <-- O.noop ]);
+            (T.jr, [ aluc <-- O.noop ]);
+            (* Branch *)
+            (T.bne, [ aluc <-- O.noop ]);
+            (T.beq, [ aluc <-- O.noop ]);
           ];
       ]);
   Always.Variable.value aluc
+
+let type_to_pc_sel type_ =
+  let module PE = Pc_sel.Enum in
+  let module PB = Pc_sel.Binary in
+  let of_enum = PB.of_enum (module Signal) in
+  PB.Of_signal.priority_select_with_default ~default:(of_enum PE.Pc_incr)
+  [
+    {
+      With_valid.valid = (type_ ==: Instruction_type.j )|: (type_ ==: Instruction_type.jal);
+      value = of_enum PE.Jump_addr;
+    };
+    {
+      With_valid.valid = type_ ==: Instruction_type.jr;
+      value = of_enum PE.Jump_reg;
+    };
+    {
+      With_valid.valid = type_ ==: Instruction_type.beq;
+      value = of_enum PE.Branch_eq;
+    };
+    {
+      With_valid.valid = type_ ==: Instruction_type.bne;
+      value = of_enum PE.Branch_neq;
+    };
+  ]
 
 let control_core format type_ =
   let module F = Instruction_format in
   let module T = Instruction_type in
   let reg_write_enable =
-    format ==: F.r_type |: (type_ ==: T.addi) |: (type_ ==: T.addiu)
+    ((format ==: F.r_type) &: (type_ <>: T.jr)) |: (type_ ==: T.addi) |: (type_ ==: T.addiu)
     |: (type_ ==: T.andi) |: (type_ ==: T.ori) |: (type_ ==: T.xori)
     |: (type_ ==: T.lui) |: (type_ ==: T.slti) |: (type_ ==: T.sltiu)
-    |: (type_ ==: T.lw)
+    |: (type_ ==: T.lw) |: (type_ ==: T.jal)
   in
   let sel_mem_for_reg_data = type_ ==: T.lw in
   let mem_write_enable = type_ ==: T.sw in
@@ -279,6 +365,8 @@ let control_core format type_ =
   in
   let sel_imm_for_alu = format ==: F.i_type in
   let alu_control = type_to_alu_control type_ in
+  let pc_sel = type_to_pc_sel type_ in
+  let jal = type_ ==: T.jal in
   let module C = Control_signals in
   {
     C.reg_write_enable;
@@ -289,6 +377,8 @@ let control_core format type_ =
     alu_control;
     (* This will get overriden in `instruction_decode` *)
     stall_pc = of_string "1'b0";
+    pc_sel;
+    jal;
   }
 
 let circuit_impl (_scope : Scope.t) (input : _ I.t) =

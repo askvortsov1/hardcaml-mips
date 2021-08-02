@@ -21,8 +21,9 @@ module O = struct
     alu_a : 'a; [@bits 32]
     alu_b : 'a; [@bits 32]
     rdest : 'a; [@bits 5]
-    ze_imm : 'a; [@bits 32]
+    se_imm : 'a; [@bits 32]
     alu_imm : 'a; [@bits 32]
+    addr : 'a; [@bits 26]
   }
   [@@deriving sexp_of, hardcaml]
 end
@@ -118,8 +119,9 @@ let circuit_impl (scope : Scope.t) (input : _ I.t) =
     alu_a;
     alu_b;
     rdest = parsed.rdest;
-    ze_imm = parsed.ze_imm;
+    se_imm = parsed.se_imm;
     alu_imm = parsed.alu_imm;
+    addr = parsed.addr;
   }
 
 let circuit_impl_exn scope input =

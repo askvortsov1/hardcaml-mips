@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.0.0](https://github.com/askvortsov1/hardcaml-mips/compare/v0.14.0...v1.0.0)
+
+- Implemented control flow instructions
+  - j, jal, jr
+  - bne, beq
+- Fixed sw source bugs 
+  - Use alu_b instead of alu_a
+  - Pipeline data address properly
+- Use zero-extended immediate for shift instructions
+- Added integration tests
+- Added an actual program
+- Bump ocamlformat version
+
 ## [0.14.0](https://github.com/askvortsov1/hardcaml-mips/compare/v0.13.0...v0.14.0)
 
 - Added stalls
