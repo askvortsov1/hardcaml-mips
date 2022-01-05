@@ -1,0 +1,4 @@
+(executable
+ (name arty)
+ (modules arty)
+ (libraries hardcaml hardcaml_arty hardcaml_mips))
