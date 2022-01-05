@@ -16,5 +16,11 @@ outputs/hardcaml_arty_top.bit outputs/post_route.dcp: route.tcl outputs/post_pla
 	vivado -nojournal -mode batch -source route.tcl -log outputs/route.log
 	rm -f usage_statistics_webtalk.html usage_statistics_webtalk.xml
 
+make build:
+	make outputs/hardcaml_arty_top.bit
+
+make prog:
+	djtgcfg prog --file outputs/hardcaml_arty_top.bit -d Arty -i 0
+
 clean:
 	rm -f outputs/*
