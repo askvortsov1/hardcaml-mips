@@ -29,7 +29,7 @@ let%expect_test "Uses different rdest for RType and IType" =
           List.map Expert.Port_name.of_string
             [ "instruction"; "rs"; "rt"; "rdest" ];
         wave_format = Wave_format.Hex;
-        alignment = Wave_format.Left;
+        alignment = Text_alignment.Left;
       }
   in
   Waveform.print ~display_rules:[ display_rule ] ~wave_width:4 ~display_width:90
