@@ -6,11 +6,7 @@ module I = struct
 end
 
 module O = struct
-  type 'a t = {
-    writeback_data : 'a; [@bits 32]
-    instruction : 'a; [@bits 32]
-    pc : 'a; [@bits 32]
-  }
+  type 'a t = { writeback_data : 'a; [@bits 32] writeback_pc : 'a [@bits 32] }
   [@@deriving sexp_of, hardcaml]
 end
 
@@ -20,9 +16,7 @@ let circuit_impl (program : Program.t) (scope : Scope.t) (input : _ I.t) =
   (* Instruction Fetch Stage *)
   let pc = wire 32 in
 
-  let instruction_fetch =
-    Instruction_fetch.hierarchical program scope { pc }
-  in
+  let instruction_fetch = Instruction_fetch.hierarchical program scope { pc } in
 
   (* Instruction Decode *)
   let reg_write_enable = wire 1 in
@@ -32,7 +26,9 @@ let circuit_impl (program : Program.t) (scope : Scope.t) (input : _ I.t) =
   let writeback_data = wire 32 in
 
   let prev_stall_pc = wire 1 in
-  let prev_instruction = pipeline ~n:2 ~enable:vdd r instruction_fetch.instruction in
+  let prev_instruction =
+    pipeline ~n:2 ~enable:vdd r instruction_fetch.instruction
+  in
   let curr_instruction = reg ~enable:vdd r instruction_fetch.instruction in
   let instruction = mux2 prev_stall_pc prev_instruction curr_instruction in
 
@@ -56,18 +52,22 @@ let circuit_impl (program : Program.t) (scope : Scope.t) (input : _ I.t) =
   reg_write_enable <== ctrl_sigs.reg_write_enable;
   writeback_address <== instruction_decode.rdest;
 
+  let gen_next_pc =
+    Gen_next_pc.hierarchical scope
+      {
+        Gen_next_pc.I.alu_a = instruction_decode.alu_a;
+        alu_b = instruction_decode.alu_b;
+        addr = instruction_decode.addr;
+        se_imm = instruction_decode.se_imm;
+        pc;
+        prev_pc = reg ~enable:vdd r pc;
+        pc_sel = ctrl_sigs.pc_sel;
+      }
+  in
 
-  let gen_next_pc = Gen_next_pc.hierarchical scope {
-    Gen_next_pc.I.alu_a = instruction_decode.alu_a;
-    alu_b = instruction_decode.alu_b;
-    addr = instruction_decode.addr;
-    se_imm = instruction_decode.se_imm;
-    pc = pc;
-    prev_pc = reg ~enable:vdd r pc;
-    pc_sel = ctrl_sigs.pc_sel;
-  } in
-
-  let pc_reg = reg ~enable:vdd r (mux2 ctrl_sigs.stall_pc pc gen_next_pc.next_pc) in
+  let pc_reg =
+    reg ~enable:vdd r (mux2 ctrl_sigs.stall_pc pc gen_next_pc.next_pc)
+  in
   pc <== pc_reg;
   prev_stall_pc <== reg ~enable:vdd r ctrl_sigs.stall_pc;
 
@@ -93,7 +93,7 @@ let circuit_impl (program : Program.t) (scope : Scope.t) (input : _ I.t) =
       }
   in
   e_alu_output <== instruction_execute.alu_result;
-  m_alu_output <== (reg ~enable:vdd r instruction_execute.alu_result);
+  m_alu_output <== reg ~enable:vdd r instruction_execute.alu_result;
 
   (* Memory *)
   let mem_write_enable =
@@ -103,12 +103,7 @@ let circuit_impl (program : Program.t) (scope : Scope.t) (input : _ I.t) =
   let data_address = reg ~enable:vdd r instruction_execute.alu_result in
   let memory =
     Memory.hierarchical scope
-      {
-        Memory.I.clock = input.clock;
-        mem_write_enable;
-        data;
-        data_address;
-      }
+      { Memory.I.clock = input.clock; mem_write_enable; data; data_address }
   in
   m_data_output <== memory.data_output;
 
@@ -126,7 +121,10 @@ let circuit_impl (program : Program.t) (scope : Scope.t) (input : _ I.t) =
   writeback_data <== writeback.writeback_data;
 
   (* Outputs *)
-  { O.writeback_data = writeback.writeback_data; pc = pc_reg; instruction}
+  {
+    O.writeback_data = writeback.writeback_data;
+    writeback_pc = pipeline ~n:3 ~enable:vdd r pc;
+  }
 
 let circuit_impl_exn program scope input =
   let module W = Width_check.With_interface (I) (O) in
