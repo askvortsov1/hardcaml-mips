@@ -48,6 +48,7 @@ jobs:
       - name: Install Deps
         run: | 
           opam install dune core hardcaml hardcaml_waveterm ppx_deriving_hardcaml ppx_expect ppx_jane
+          opam pin add https://github.com/askvortsov1/hardcaml_arty.git#as/make-installable --yes
           eval $(opam env)
         
       - name: Build
