@@ -129,3 +129,7 @@ let circuit_impl (program : Program.t) (scope : Scope.t) (input : _ I.t) =
 let circuit_impl_exn program scope input =
   let module W = Width_check.With_interface (I) (O) in
   W.check_widths (circuit_impl program scope) input
+
+let hierarchical program scope input =
+  let module H = Hierarchy.In_scope (I) (O) in
+  H.hierarchical ~scope ~name:"datapath" (circuit_impl_exn program) input
