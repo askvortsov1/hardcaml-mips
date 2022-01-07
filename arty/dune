@@ -1,4 +1,9 @@
 (executable
  (name arty)
  (modules arty)
- (libraries hardcaml hardcaml_arty hardcaml_mips))
+ (libraries hardcaml hardcaml_arty hardcaml_mips hardcaml_mips_arty))
+
+(executable
+ (name interactive)
+ (modules interactive)
+ (libraries hardcaml hardcaml_waveterm hardcaml_waveterm.interactive hardcaml_mips hardcaml_arty hardcaml_mips_arty))

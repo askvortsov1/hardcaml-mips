@@ -1,0 +1,22 @@
+(lang dune 2.8)
+
+(cram enable)
+
+(package
+ (name hardcaml_mips_arty)
+ (synopsis "A wrapper for hardcaml_mips on the Arty A7 FPGA."))
+
+(version 1.0.0)
+
+(generate_opam_files true)
+
+(source
+ (github askvortsov1/hardcaml-mips))
+
+(license MIT)
+
+(authors "Alexander Skvortsov" "Mayur Deshpande")
+
+(maintainers "sasha.skvortsov109@gmail.com")
+
+(homepage "https://ceramichacker.com/blog/category/hardcaml-mips")
