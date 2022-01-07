@@ -123,7 +123,7 @@ let circuit_impl (program : Program.t) (scope : Scope.t) (input : _ I.t) =
   (* Outputs *)
   {
     O.writeback_data = writeback.writeback_data;
-    writeback_pc = pipeline ~n:3 ~enable:vdd r pc;
+    writeback_pc = pipeline ~n:4 ~enable:vdd r pc;
   }
 
 let circuit_impl_exn program scope input =
