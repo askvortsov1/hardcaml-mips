@@ -32,7 +32,7 @@ module Tx_buffer = struct
   end
   let create ~clock (input: t Word_with_valid.t) =
     let spec = Reg_spec.create ~clock () in
-    let reg_write_buffer = reg_fb spec ~enable:vdd ~w:32  (fun curr -> mux2 input.valid input.value curr) in
+    let reg_write_buffer = reg_fb spec ~enable:vdd ~width:32  ~f:(fun curr -> mux2 input.valid input.value curr) in
 
     let sm = Always.State_machine.create (module States) spec ~enable:vdd in
     let read_buffer_index = Always.Variable.reg spec ~enable:vdd ~width:2 in

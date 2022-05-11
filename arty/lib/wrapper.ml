@@ -17,7 +17,7 @@ let store_on_finished clk pc data =
   let spec = Reg_spec.create ~clock:clk () in
   let on_output_instr = pc ==: of_string last_pc in
   let data_reg =
-    reg_fb spec ~enable:vdd ~w:8 (fun v ->
+    reg_fb spec ~enable:vdd ~width:8 ~f:(fun v ->
         mux2 on_output_instr data.:[(7, 0)] v)
   in
   mux2 on_output_instr data.:[(7, 0)] data_reg
@@ -34,7 +34,7 @@ let circuit_impl program _scope (input : _ User_application.I.t) =
       }
   in
   {
-    User_application.O.led_4bits = of_string "4'b1111";
+    User_application.O.led_4bits = of_string "4'b0000";
     uart_tx = uart_tx;
     led_rgb = [ rgb gnd; rgb gnd; rgb gnd; rgb gnd ];
     ethernet = User_application.Ethernet.O.unused (module Signal);
