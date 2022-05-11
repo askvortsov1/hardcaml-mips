@@ -1,6 +1,6 @@
 open Hardcaml
-open Hardcaml_arty
 open Signal
+module User_application = Hardcaml_arty.User_application
 
 let rgb on = { User_application.Led_rgb.r = on; g = on; b = on }
 
@@ -17,7 +17,7 @@ let store_on_finished clk pc data =
   let spec = Reg_spec.create ~clock:clk () in
   let on_output_instr = pc ==: of_string last_pc in
   let data_reg =
-    reg_fb spec ~enable:vdd ~w:8 (fun v ->
+    reg_fb spec ~enable:vdd ~width:8 ~f:(fun v ->
         mux2 on_output_instr data.:[(7, 0)] v)
   in
   mux2 on_output_instr data.:[(7, 0)] data_reg
@@ -27,17 +27,15 @@ let circuit_impl program _scope (input : _ User_application.I.t) =
     Mips.Datapath.hierarchical program _scope { clock = input.clk_166 }
   in
   let uart_tx =
-    { With_valid.valid = input.uart_rx.valid; value = input.uart_rx.value }
+    Uart.Tx_buffer.create ~clock:input.clk_166
+      {
+        With_valid.valid = datapath.writeback_pc ==: of_string last_pc;
+        value = datapath.writeback_data;
+      }
   in
-  let finished_data =
-    store_on_finished input.clk_166 datapath.writeback_pc
-      datapath.writeback_data
-  in
-  let display = display_val datapath.writeback_pc finished_data in
   {
-    User_application.O.led_4bits = display.:[(7, 4)];
-    uart_tx;
-    led_rgb =
-      [ rgb display.:(0); rgb display.:(1); rgb display.:(2); rgb display.:(3) ];
+    User_application.O.led_4bits = of_string "4'b0000";
+    uart_tx = uart_tx;
+    led_rgb = [ rgb gnd; rgb gnd; rgb gnd; rgb gnd ];
     ethernet = User_application.Ethernet.O.unused (module Signal);
   }
