@@ -1,7 +1,7 @@
 (library
  (name Mips)
  (public_name hardcaml_mips)
- (libraries hardcaml)
+ (libraries hardcaml hardcaml_arty)
  (preprocess
   (pps ppx_jane ppx_deriving_hardcaml)))
 

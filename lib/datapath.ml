@@ -2,11 +2,23 @@ open Hardcaml
 open Hardcaml.Signal
 
 module I = struct
-  type 'a t = { clock : 'a } [@@deriving sexp_of, hardcaml]
+  type 'a t = {
+    clock : 'a; [@bits 1]
+    read_data: 'a; [@bits 32]
+  }
+  [@@deriving sexp_of, hardcaml]
 end
 
 module O = struct
-  type 'a t = { writeback_data : 'a; [@bits 32] writeback_pc : 'a [@bits 32] }
+  type 'a t = {
+    write_enable : 'a; [@bits 1]
+    write_addr : 'a; [@bits 32]
+    write_data : 'a; [@bits 32]
+    read_enable : 'a; [@bits 1]
+    read_addr : 'a; [@bits 32]
+    writeback_data : 'a; [@bits 32]
+    writeback_pc : 'a; [@bits 32]
+  }
   [@@deriving sexp_of, hardcaml]
 end
 
@@ -34,7 +46,6 @@ let circuit_impl (program : Program.t) (scope : Scope.t) (input : _ I.t) =
 
   let e_alu_output = wire 32 in
   let m_alu_output = wire 32 in
-  let m_data_output = wire 32 in
   let instruction_decode =
     Instruction_decode.hierarchical scope
       {
@@ -45,7 +56,7 @@ let circuit_impl (program : Program.t) (scope : Scope.t) (input : _ I.t) =
         instruction;
         e_alu_output;
         m_alu_output;
-        m_data_output;
+        m_data_output = input.read_data;
       }
   in
   let ctrl_sigs = instruction_decode.control_signals in
@@ -101,18 +112,14 @@ let circuit_impl (program : Program.t) (scope : Scope.t) (input : _ I.t) =
   in
   let data = pipeline ~n:2 ~enable:vdd r instruction_decode.alu_b in
   let data_address = reg ~enable:vdd r instruction_execute.alu_result in
-  let memory =
-    Memory.hierarchical scope
-      { Memory.I.clock = input.clock; mem_write_enable; data; data_address }
-  in
-  m_data_output <== memory.data_output;
+  (* Memory access is handled by the bus. *)
 
   (* Writeback *)
   let sel_mem_for_reg_data =
     pipeline ~n:3 ~enable:vdd r ctrl_sigs.sel_mem_for_reg_data
   in
   let alu_result = pipeline ~n:2 ~enable:vdd r instruction_execute.alu_result in
-  let data_output = reg ~enable:vdd r memory.data_output in
+  let data_output = reg ~enable:vdd r input.read_data in
 
   let writeback =
     Writeback.hierarchical scope
@@ -122,7 +129,12 @@ let circuit_impl (program : Program.t) (scope : Scope.t) (input : _ I.t) =
 
   (* Outputs *)
   {
-    O.writeback_data = writeback.writeback_data;
+    O.write_enable = mem_write_enable;
+    write_addr = data_address;
+    write_data = data;
+    read_enable = of_bool true;
+    read_addr = data_address;
+    writeback_data = writeback_data;
     writeback_pc = pipeline ~n:4 ~enable:vdd r pc;
   }
 
