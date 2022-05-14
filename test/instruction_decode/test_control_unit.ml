@@ -67,7 +67,7 @@ let%expect_test "Control signals and alu_imm correct for arithmetic ops" =
   let subu = "32'h012A4023" in
 
   let waves = testbench [ add; addu; addi; addiu; sub; subu ] in
-  Waveform.print ~wave_width:4 ~display_width:90 ~display_height:45 waves;
+  Waveform.print ~wave_width:4 ~display_width:90 ~display_height:50 waves;
   [%expect
     {|
     ┌Signals───────────┐┌Waves───────────────────────────────────────────────────────────────┐
@@ -87,6 +87,8 @@ let%expect_test "Control signals and alu_imm correct for arithmetic ops" =
     │binary_variant    ││ 0                                                                  │
     │                  ││────────────────────────────────────────────────────────────        │
     │jal               ││                                                                    │
+    │                  ││────────────────────────────────────────────────────────────        │
+    │mem_read_enable   ││                                                                    │
     │                  ││────────────────────────────────────────────────────────────        │
     │mem_write_enable  ││                                                                    │
     │                  ││────────────────────────────────────────────────────────────        │
@@ -114,6 +116,9 @@ let%expect_test "Control signals and alu_imm correct for arithmetic ops" =
     │shamt             ││ 00                 │1E                 │00                         │
     │                  ││────────────────────┴───────────────────┴───────────────────        │
     │stall_pc          ││                                                                    │
+    │                  ││────────────────────────────────────────────────────────────        │
+    │                  ││                                                                    │
+    │                  ││                                                                    │
     └──────────────────┘└────────────────────────────────────────────────────────────────────┘
   |}]
 
@@ -126,7 +131,7 @@ let%expect_test "Control signals and alu_imm correct for logical ops" =
   let xori = "32'h3928FFAA" in
 
   let waves = testbench [ and_; andi; or_; ori; xor; xori ] in
-  Waveform.print ~wave_width:4 ~display_width:90 ~display_height:45 waves;
+  Waveform.print ~wave_width:4 ~display_width:90 ~display_height:50 waves;
   [%expect
     {|
     ┌Signals───────────┐┌Waves───────────────────────────────────────────────────────────────┐
@@ -146,6 +151,8 @@ let%expect_test "Control signals and alu_imm correct for logical ops" =
     │binary_variant    ││ 0                                                                  │
     │                  ││────────────────────────────────────────────────────────────        │
     │jal               ││                                                                    │
+    │                  ││────────────────────────────────────────────────────────────        │
+    │mem_read_enable   ││                                                                    │
     │                  ││────────────────────────────────────────────────────────────        │
     │mem_write_enable  ││                                                                    │
     │                  ││────────────────────────────────────────────────────────────        │
@@ -173,6 +180,9 @@ let%expect_test "Control signals and alu_imm correct for logical ops" =
     │shamt             ││ 00       │1E       │00       │1E       │00       │1E               │
     │                  ││──────────┴─────────┴─────────┴─────────┴─────────┴─────────        │
     │stall_pc          ││                                                                    │
+    │                  ││────────────────────────────────────────────────────────────        │
+    │                  ││                                                                    │
+    │                  ││                                                                    │
     └──────────────────┘└────────────────────────────────────────────────────────────────────┘
   |}]
 
@@ -185,7 +195,7 @@ let%expect_test "Control signals and alu_imm correct for shift ops" =
   let srav = "32'h01494007" in
 
   let waves = testbench [ sll; sllv; srl; srlv; sra; srav ] in
-  Waveform.print ~wave_width:4 ~display_width:90 ~display_height:45 waves;
+  Waveform.print ~wave_width:4 ~display_width:90 ~display_height:50 waves;
   [%expect
     {|
     ┌Signals───────────┐┌Waves───────────────────────────────────────────────────────────────┐
@@ -205,6 +215,8 @@ let%expect_test "Control signals and alu_imm correct for shift ops" =
     │binary_variant    ││ 0                                                                  │
     │                  ││────────────────────────────────────────────────────────────        │
     │jal               ││                                                                    │
+    │                  ││────────────────────────────────────────────────────────────        │
+    │mem_read_enable   ││                                                                    │
     │                  ││────────────────────────────────────────────────────────────        │
     │mem_write_enable  ││                                                                    │
     │                  ││────────────────────────────────────────────────────────────        │
@@ -232,6 +244,9 @@ let%expect_test "Control signals and alu_imm correct for shift ops" =
     │shamt             ││ 04       │00       │04       │00       │04       │00               │
     │                  ││──────────┴─────────┴─────────┴─────────┴─────────┴─────────        │
     │stall_pc          ││                                                                    │
+    │                  ││────────────────────────────────────────────────────────────        │
+    │                  ││                                                                    │
+    │                  ││                                                                    │
     └──────────────────┘└────────────────────────────────────────────────────────────────────┘
   |}]
 
@@ -241,7 +256,7 @@ let%expect_test "Control signals and alu_imm correct for Other I type ops" =
   (* alu_imm sign vs zero extended doesn't matter here,
    * because we only use the last 16 bits of imm. *)
   let waves = testbench [ lui ] in
-  Waveform.print ~wave_width:4 ~display_width:90 ~display_height:45 waves;
+  Waveform.print ~wave_width:4 ~display_width:90 ~display_height:50 waves;
   [%expect
     {|
     ┌Signals───────────┐┌Waves───────────────────────────────────────────────────────────────┐
@@ -261,6 +276,8 @@ let%expect_test "Control signals and alu_imm correct for Other I type ops" =
     │binary_variant    ││ 0                                                                  │
     │                  ││──────────                                                          │
     │jal               ││                                                                    │
+    │                  ││──────────                                                          │
+    │mem_read_enable   ││                                                                    │
     │                  ││──────────                                                          │
     │mem_write_enable  ││                                                                    │
     │                  ││──────────                                                          │
@@ -288,6 +305,9 @@ let%expect_test "Control signals and alu_imm correct for Other I type ops" =
     │shamt             ││ 1E                                                                 │
     │                  ││──────────                                                          │
     │stall_pc          ││                                                                    │
+    │                  ││──────────                                                          │
+    │                  ││                                                                    │
+    │                  ││                                                                    │
     └──────────────────┘└────────────────────────────────────────────────────────────────────┘
   |}]
 
@@ -298,7 +318,7 @@ let%expect_test "Control signals and alu_imm correct for comparison ops" =
   let sltiu = "32'h2D28FFAA" in
 
   let waves = testbench [ slt; sltu; slti; sltiu ] in
-  Waveform.print ~wave_width:4 ~display_width:90 ~display_height:45 waves;
+  Waveform.print ~wave_width:4 ~display_width:90 ~display_height:50 waves;
   [%expect
     {|
   ┌Signals───────────┐┌Waves───────────────────────────────────────────────────────────────┐
@@ -318,6 +338,8 @@ let%expect_test "Control signals and alu_imm correct for comparison ops" =
   │binary_variant    ││ 0                                                                  │
   │                  ││────────────────────────────────────────                            │
   │jal               ││                                                                    │
+  │                  ││────────────────────────────────────────                            │
+  │mem_read_enable   ││                                                                    │
   │                  ││────────────────────────────────────────                            │
   │mem_write_enable  ││                                                                    │
   │                  ││────────────────────────────────────────                            │
@@ -345,6 +367,9 @@ let%expect_test "Control signals and alu_imm correct for comparison ops" =
   │shamt             ││ 00                 │1E                                             │
   │                  ││────────────────────┴───────────────────                            │
   │stall_pc          ││                                                                    │
+  │                  ││────────────────────────────────────────                            │
+  │                  ││                                                                    │
+  │                  ││                                                                    │
   └──────────────────┘└────────────────────────────────────────────────────────────────────┘
 |}]
 
@@ -353,7 +378,7 @@ let%expect_test "Control signals and alu_imm correct for memory ops" =
   let sw = "32'hAD28FFAA" in
 
   let waves = testbench [ lw; sw ] in
-  Waveform.print ~wave_width:4 ~display_width:90 ~display_height:45 waves;
+  Waveform.print ~wave_width:4 ~display_width:90 ~display_height:50 waves;
   [%expect
     {|
   ┌Signals───────────┐┌Waves───────────────────────────────────────────────────────────────┐
@@ -374,6 +399,8 @@ let%expect_test "Control signals and alu_imm correct for memory ops" =
   │                  ││────────────────────                                                │
   │jal               ││                                                                    │
   │                  ││────────────────────                                                │
+  │mem_read_enable   ││──────────┐                                                         │
+  │                  ││          └─────────                                                │
   │mem_write_enable  ││          ┌─────────                                                │
   │                  ││──────────┘                                                         │
   │                  ││────────────────────                                                │
@@ -400,6 +427,9 @@ let%expect_test "Control signals and alu_imm correct for memory ops" =
   │shamt             ││ 1E                                                                 │
   │                  ││────────────────────                                                │
   │stall_pc          ││                                                                    │
+  │                  ││────────────────────                                                │
+  │                  ││                                                                    │
+  │                  ││                                                                    │
   └──────────────────┘└────────────────────────────────────────────────────────────────────┘
 |}]
 
@@ -410,7 +440,7 @@ let%expect_test "Control signals and alu_imm correct for jump ops" =
   let jal = "32'h0C000004" in
 
   let waves = testbench [ j; jr; jal ] in
-  Waveform.print ~wave_width:4 ~display_width:90 ~display_height:45 waves;
+  Waveform.print ~wave_width:4 ~display_width:90 ~display_height:50 waves;
   [%expect
     {|
   ┌Signals───────────┐┌Waves───────────────────────────────────────────────────────────────┐
@@ -431,6 +461,8 @@ let%expect_test "Control signals and alu_imm correct for jump ops" =
   │                  ││──────────┴─────────┴─────────                                      │
   │jal               ││                    ┌─────────                                      │
   │                  ││────────────────────┘                                               │
+  │mem_read_enable   ││                                                                    │
+  │                  ││──────────────────────────────                                      │
   │mem_write_enable  ││                                                                    │
   │                  ││──────────────────────────────                                      │
   │                  ││────────────────────┬─────────                                      │
@@ -457,6 +489,9 @@ let%expect_test "Control signals and alu_imm correct for jump ops" =
   │shamt             ││ 00                                                                 │
   │                  ││──────────────────────────────                                      │
   │stall_pc          ││                                                                    │
+  │                  ││──────────────────────────────                                      │
+  │                  ││                                                                    │
+  │                  ││                                                                    │
   └──────────────────┘└────────────────────────────────────────────────────────────────────┘
 |}]
 
@@ -465,7 +500,7 @@ let%expect_test "Control signals and alu_imm correct for branch ops" =
   let beq = "32'h11280004" in
 
   let waves = testbench [ bne; beq ] in
-  Waveform.print ~wave_width:4 ~display_width:90 ~display_height:45 waves;
+  Waveform.print ~wave_width:4 ~display_width:90 ~display_height:50 waves;
   [%expect
     {|
   ┌Signals───────────┐┌Waves───────────────────────────────────────────────────────────────┐
@@ -485,6 +520,8 @@ let%expect_test "Control signals and alu_imm correct for branch ops" =
   │binary_variant    ││ 4        │3                                                        │
   │                  ││──────────┴─────────                                                │
   │jal               ││                                                                    │
+  │                  ││────────────────────                                                │
+  │mem_read_enable   ││                                                                    │
   │                  ││────────────────────                                                │
   │mem_write_enable  ││                                                                    │
   │                  ││────────────────────                                                │
@@ -512,5 +549,8 @@ let%expect_test "Control signals and alu_imm correct for branch ops" =
   │shamt             ││ 00                                                                 │
   │                  ││────────────────────                                                │
   │stall_pc          ││                                                                    │
+  │                  ││────────────────────                                                │
+  │                  ││                                                                    │
+  │                  ││                                                                    │
   └──────────────────┘└────────────────────────────────────────────────────────────────────┘
 |}]

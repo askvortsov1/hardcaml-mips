@@ -114,6 +114,9 @@ let circuit_impl (program : Program.t) (scope : Scope.t) (input : _ I.t) =
   let mem_write_enable =
     pipeline ~n:2 ~enable r ctrl_sigs.mem_write_enable
   in
+  let mem_read_enable =
+    pipeline ~n:2 ~enable r ctrl_sigs.mem_read_enable
+  in
   let data = pipeline ~n:2 ~enable r instruction_decode.alu_b in
   let data_address = reg ~enable r instruction_execute.alu_result in
 
@@ -137,7 +140,7 @@ let circuit_impl (program : Program.t) (scope : Scope.t) (input : _ I.t) =
     O.write_enable = mem_write_enable;
     write_addr = data_address;
     write_data = data;
-    read_enable = of_bool true;
+    read_enable = mem_read_enable;
     read_addr = data_address;
     writeback_data;
     writeback_pc = pipeline ~n:4 ~enable r pc;
