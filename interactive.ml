@@ -1,6 +1,7 @@
 open Hardcaml
 open Hardcaml_waveterm
-open Mips.Datapath
+open Mips.Cpu
+
 module Simulator = Cyclesim.With_interface (I) (O)
 
 let testbench n =
