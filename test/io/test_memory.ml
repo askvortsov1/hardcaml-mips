@@ -11,12 +11,12 @@ type test_input = {
 
 let testbench () =
   let scope = Scope.create ~flatten_design:true () in
-  let sim = Simulator.create (circuit_impl_exn scope) in
+  let sim = Simulator.create (circuit_impl scope) in
   let waves, sim = Waveform.create sim in
   let inputs = Cyclesim.inputs sim in
 
   let step ~test =
-    inputs.mem_write_enable := Bits.of_string test.write_enable;
+    inputs.write_enable := Bits.of_string test.write_enable;
     inputs.read_addr := Bits.of_string test.data_address;
     inputs.write_addr := Bits.of_string test.data_address;
     inputs.write_data := Bits.of_string test.write_data;
@@ -54,8 +54,6 @@ let%expect_test "can we read and write to/from data memory properly" =
     ┌Signals───────────┐┌Waves───────────────────────────────────────────────────────────────┐
     │clock             ││┌────┐    ┌────┐    ┌────┐    ┌────┐    ┌────┐    ┌────┐    ┌────┐  │
     │                  ││     └────┘    └────┘    └────┘    └────┘    └────┘    └────┘    └──│
-    │mem_write_enable  ││                    ┌─────────┐                                     │
-    │                  ││────────────────────┘         └─────────                            │
     │                  ││────────────────────────────────────────                            │
     │read_addr         ││ 00000009                                                           │
     │                  ││────────────────────────────────────────                            │
@@ -65,11 +63,13 @@ let%expect_test "can we read and write to/from data memory properly" =
     │                  ││──────────┬─────────┬─────────┬─────────                            │
     │write_data        ││ 00000007 │00000006 │00000086 │00000006                             │
     │                  ││──────────┴─────────┴─────────┴─────────                            │
+    │write_enable      ││                    ┌─────────┐                                     │
+    │                  ││────────────────────┘         └─────────                            │
+    │io_busy           ││                                                                    │
+    │                  ││────────────────────────────────────────                            │
     │                  ││──────────────────────────────┬─────────                            │
-    │data_output       ││ 00000000                     │00000086                             │
+    │read_data         ││ 00000000                     │00000086                             │
     │                  ││──────────────────────────────┴─────────                            │
-    │                  ││                                                                    │
-    │                  ││                                                                    │
     │                  ││                                                                    │
     │                  ││                                                                    │
     │                  ││                                                                    │
