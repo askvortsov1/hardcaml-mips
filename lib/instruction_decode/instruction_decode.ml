@@ -3,8 +3,9 @@ open Hardcaml.Signal
 
 module I = struct
   type 'a t = {
-    clock : 'a;
-    writeback_reg_write_enable : 'a;
+    clock : 'a; [@bits 1]
+    enable_pipeline : 'a; [@bits 1]
+    writeback_reg_write_enable : 'a; [@bits 1]
     writeback_address : 'a; [@bits 5]
     writeback_data : 'a; [@bits 32]
     instruction : 'a; [@bits 32]
@@ -55,6 +56,8 @@ let stall_signals scope (sigs: _ Control_unit.Control_signals.t) rs rt e_dest e_
   }
 
 let circuit_impl (scope : Scope.t) (input : _ I.t) =
+  let enable = input.enable_pipeline in
+
   let control_unit =
     Control_unit.hierarchical scope { instruction = input.instruction }
   in
@@ -66,15 +69,15 @@ let circuit_impl (scope : Scope.t) (input : _ I.t) =
   in
 
   let r = Reg_spec.create ~clock:input.clock () in
-  let e_dest = reg ~enable:vdd r parsed.rdest in
-  let m_dest = pipeline ~n:2 ~enable:vdd r parsed.rdest in
+  let e_dest = reg ~enable r parsed.rdest in
+  let m_dest = pipeline ~n:2 ~enable r parsed.rdest in
 
   let m2reg = control_unit.control_signals.sel_mem_for_reg_data in
   let wreg = control_unit.control_signals.reg_write_enable in
-  let e_sel_mem_for_reg_data = reg ~enable:vdd r m2reg in
-  let m_sel_mem_for_reg_data = pipeline ~n:2 ~enable:vdd r m2reg in
-  let e_reg_write_enable = reg ~enable:vdd r wreg in
-  let m_reg_write_enable = pipeline ~n:2 ~enable:vdd r wreg in
+  let e_sel_mem_for_reg_data = reg ~enable r m2reg in
+  let m_sel_mem_for_reg_data = pipeline ~n:2 ~enable r m2reg in
+  let e_reg_write_enable = reg ~enable r wreg in
+  let m_reg_write_enable = pipeline ~n:2 ~enable r wreg in
 
   let forwarding_unit_inputs reg reg_value =
     {

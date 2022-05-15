@@ -150,6 +150,7 @@ module Control_signals = struct
     reg_write_enable : 'a;
     sel_mem_for_reg_data : 'a;
     mem_write_enable : 'a;
+    mem_read_enable : 'a;
     sel_shift_for_alu : 'a;
     sel_imm_for_alu : 'a;
     stall_pc: 'a;
@@ -360,6 +361,7 @@ let control_core format type_ =
   in
   let sel_mem_for_reg_data = type_ ==: T.lw in
   let mem_write_enable = type_ ==: T.sw in
+  let mem_read_enable = type_ ==: T.lw in
   let sel_shift_for_alu =
     type_ ==: T.sll |: (type_ ==: T.srl) |: (type_ ==: T.sra)
   in
@@ -372,6 +374,7 @@ let control_core format type_ =
     C.reg_write_enable;
     sel_mem_for_reg_data;
     mem_write_enable;
+    mem_read_enable;
     sel_shift_for_alu;
     sel_imm_for_alu;
     alu_control;

@@ -18,6 +18,7 @@ let testbench tests =
   let inputs = Cyclesim.inputs sim in
 
   let step ~test =
+    inputs.enable_pipeline := Bits.of_bool true;
     inputs.instruction := Bits.of_string test.instruction;
     inputs.writeback_reg_write_enable := Bits.of_string test.write_enable;
     inputs.writeback_address := Bits.of_string test.write_address;
@@ -72,7 +73,7 @@ let%expect_test "can we read and write to/from reg file properly" =
   in
   let waves = testbench tests in
   Waveform.expect ~show_digest:true ~wave_width:4 ~display_width:90
-    ~display_height:60 waves;
+    ~display_height:68 waves;
   [%expect
     {|
     ┌Signals───────────┐┌Waves───────────────────────────────────────────────────────────────┐
@@ -81,6 +82,8 @@ let%expect_test "can we read and write to/from reg file properly" =
     │                  ││──────────────────────────────────────────────────                  │
     │e_alu_output      ││ 00000000                                                           │
     │                  ││──────────────────────────────────────────────────                  │
+    │enable_pipeline   ││──────────────────────────────────────────────────                  │
+    │                  ││                                                                    │
     │                  ││──────────────────────────────────────────────────                  │
     │instruction       ││ 01285020                                                           │
     │                  ││──────────────────────────────────────────────────                  │
@@ -118,6 +121,8 @@ let%expect_test "can we read and write to/from reg file properly" =
     │                  ││──────────────────────────────────────────────────                  │
     │jal               ││                                                                    │
     │                  ││──────────────────────────────────────────────────                  │
+    │mem_read_enable   ││                                                                    │
+    │                  ││──────────────────────────────────────────────────                  │
     │mem_write_enable  ││                                                                    │
     │                  ││──────────────────────────────────────────────────                  │
     │                  ││──────────────────────────────────────────────────                  │
@@ -134,8 +139,12 @@ let%expect_test "can we read and write to/from reg file properly" =
     │                  ││──────────────────────────────────────────────────                  │
     │sel_shift_for_alu ││                                                                    │
     │                  ││──────────────────────────────────────────────────                  │
+    │stall_pc          ││                                                                    │
+    │                  ││──────────────────────────────────────────────────                  │
+    │                  ││                                                                    │
+    │                  ││                                                                    │
     └──────────────────┘└────────────────────────────────────────────────────────────────────┘
-    a2db52bcd95918779d065e01a106df2e |}]
+    b8927b78dd2fad3be72c95e9789ed5b9 |}]
 
 let%expect_test "0 register always returns 0, regardless of actual contents" =
   let add_rs_9_rt_0_rd_8 = "32'h01204020" in
@@ -165,7 +174,7 @@ let%expect_test "0 register always returns 0, regardless of actual contents" =
   in
   let waves = testbench tests in
   Waveform.expect ~show_digest:true ~wave_width:4 ~display_width:90
-    ~display_height:60 waves;
+    ~display_height:68 waves;
   [%expect
     {|
     ┌Signals───────────┐┌Waves───────────────────────────────────────────────────────────────┐
@@ -174,6 +183,8 @@ let%expect_test "0 register always returns 0, regardless of actual contents" =
     │                  ││──────────────────────────────                                      │
     │e_alu_output      ││ 00000000                                                           │
     │                  ││──────────────────────────────                                      │
+    │enable_pipeline   ││──────────────────────────────                                      │
+    │                  ││                                                                    │
     │                  ││──────────────────────────────                                      │
     │instruction       ││ 01204020                                                           │
     │                  ││──────────────────────────────                                      │
@@ -211,6 +222,8 @@ let%expect_test "0 register always returns 0, regardless of actual contents" =
     │                  ││──────────────────────────────                                      │
     │jal               ││                                                                    │
     │                  ││──────────────────────────────                                      │
+    │mem_read_enable   ││                                                                    │
+    │                  ││──────────────────────────────                                      │
     │mem_write_enable  ││                                                                    │
     │                  ││──────────────────────────────                                      │
     │                  ││──────────────────────────────                                      │
@@ -227,8 +240,12 @@ let%expect_test "0 register always returns 0, regardless of actual contents" =
     │                  ││──────────────────────────────                                      │
     │sel_shift_for_alu ││                                                                    │
     │                  ││──────────────────────────────                                      │
+    │stall_pc          ││                                                                    │
+    │                  ││──────────────────────────────                                      │
+    │                  ││                                                                    │
+    │                  ││                                                                    │
     └──────────────────┘└────────────────────────────────────────────────────────────────────┘
-    0837c9485998e848e95e833ee6e96a37 |}]
+    d6d577b829d8e9bf8f327c83d9c64474 |}]
 
 let%expect_test "Stalls when appropriate" =
   let add_rs_9_rt_0_rd_8 = "32'h01204020" in
@@ -265,9 +282,14 @@ let%expect_test "Stalls when appropriate" =
   let waves = testbench tests in
 
   let display_rules =
-  [ Display_rule.port_name_is_one_of ["stall_pc"; "mem_write_enable"; "reg_write_enable"] ~wave_format:Wave_format.Bit ] in
-  Waveform.expect ~display_rules ~show_digest:true ~wave_width:4 ~display_width:130
-    ~display_height:10 waves;
+    [
+      Display_rule.port_name_is_one_of
+        [ "stall_pc"; "mem_write_enable"; "reg_write_enable" ]
+        ~wave_format:Wave_format.Bit;
+    ]
+  in
+  Waveform.expect ~display_rules ~show_digest:true ~wave_width:4
+    ~display_width:130 ~display_height:10 waves;
   [%expect
     {|
     ┌Signals───────────┐┌Waves───────────────────────────────────────────────────────────────────────────────────────────────────────┐
@@ -280,4 +302,4 @@ let%expect_test "Stalls when appropriate" =
     │                  ││                                                                                                            │
     │                  ││                                                                                                            │
     └──────────────────┘└────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
-    43bb3a6f7d51a977a80885a85a181a22 |}]
+    0c7d7f198064acf7ecb50adff2647c62 |}]
