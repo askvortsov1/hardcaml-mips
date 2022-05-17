@@ -1,8 +1,0 @@
-(library
- (name Mips_arty)
- (public_name hardcaml_mips_arty)
- (libraries hardcaml hardcaml_mips hardcaml_arty)
- (preprocess
-  (pps ppx_jane ppx_deriving_hardcaml)))
-
-(include_subdirs unqualified)

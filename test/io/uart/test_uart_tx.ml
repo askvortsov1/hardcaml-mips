@@ -1,13 +1,12 @@
 open Hardcaml
 open Hardcaml_waveterm
-open Mips_arty
 
 let clock = Signal.input "clock" 1
 
 let waves =
   let valid = Signal.input "valid" 1 in
   let value = Signal.input "value" 32 in
-  let tx_sm = Uart.Tx_buffer.create ~clock { valid; value } in
+  let tx_sm = Mips.Uart.Tx_buffer.create ~clock { valid; value } in
   let uart_tx_value = Signal.output "uart_tx_value" tx_sm.value in
   let uart_tx_valid = Signal.output "uart_tx_valid" tx_sm.valid in
   let circuit =
@@ -23,7 +22,7 @@ let waves =
   Cyclesim.in_port sim "value" := Bits.of_string "32'h61727479" (* "arty" *);
   Cyclesim.cycle sim;
   Cyclesim.in_port sim "valid" := Bits.gnd;
-  for _ = 0 to Uart.cycles_per_packet * 4 do
+  for _ = 0 to Mips.Uart.cycles_per_packet * 4 do
     Cyclesim.cycle sim
   done;
   waves
@@ -59,7 +58,7 @@ let%expect_test "tx_first_byte" =
     └──────────────────┘└──────────────────────────────────────────────────────────────────────────────┘ |}]
 
 let%expect_test "tx_second_byte" =
-  Waveform.print ~start_cycle:Uart.cycles_per_packet ~display_width:100
+  Waveform.print ~start_cycle:Mips.Uart.cycles_per_packet ~display_width:100
     ~display_height:25 waves;
   [%expect
     {|
@@ -91,7 +90,7 @@ let%expect_test "tx_second_byte" =
 
 let%expect_test "tx_third_byte" =
   Waveform.print
-    ~start_cycle:(Uart.cycles_per_packet * 2)
+    ~start_cycle:(Mips.Uart.cycles_per_packet * 2)
     ~display_width:100 ~display_height:25 waves;
   [%expect
     {|
@@ -123,7 +122,7 @@ let%expect_test "tx_third_byte" =
 
 let%expect_test "tx_fourth_byte" =
   Waveform.print
-    ~start_cycle:(Uart.cycles_per_packet * 3)
+    ~start_cycle:(Mips.Uart.cycles_per_packet * 3)
     ~display_width:100 ~display_height:25 waves;
   [%expect
     {|
