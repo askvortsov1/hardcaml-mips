@@ -10,7 +10,8 @@ let gen_testbench () =
   let inputs = Cyclesim.inputs sim in
 
   let step ?(e_dest = "5'h9") ?(m_dest = "5'h9") ?(e_mem2reg = "1'b0")
-      ?(m_mem2reg = "1'b0") ?(e_rwrite = "1'b1") ?(m_rwrite = "1'b1") () =
+      ?(m_mem2reg = "1'b0") ?(e_rwrite = "1'b1") ?(m_rwrite = "1'b1")
+      ?(e_stalled = "1'b0") () =
     inputs.options.reg_value := Bits.of_string "32'd0";
     inputs.options.e_alu_output := Bits.of_string "32'd1";
     inputs.options.m_alu_output := Bits.of_string "32'd2";
@@ -22,6 +23,7 @@ let gen_testbench () =
     inputs.controls.m_sel_mem_for_reg_data := Bits.of_string m_mem2reg;
     inputs.controls.e_reg_write_enable := Bits.of_string e_rwrite;
     inputs.controls.m_reg_write_enable := Bits.of_string m_rwrite;
+    inputs.controls.e_stalled := Bits.of_string e_stalled;
     Cyclesim.cycle sim
   in
   (waves, step)
@@ -93,4 +95,20 @@ let%expect_test "Ensures no forwarding occurs when LW is in execute stage" =
     │                  ││──────────                                                          │
     │forward_data      ││ 00000000                                                           │
     │                  ││──────────                                                          │
+    └──────────────────┘└────────────────────────────────────────────────────────────────────┘ |}]
+
+let%expect_test "Does not forward from previous if prev was stalled." =
+  let waves, step = gen_testbench () in
+
+  step ~e_dest:"5'h8" ~m_dest:"5'h8" ~m_mem2reg:"1'b1" ~e_stalled:"1'b0" ();
+  step ~e_dest:"5'h8" ~m_dest:"5'h8" ~m_mem2reg:"1'b1" ~e_stalled:"1'b1" ();
+
+  Waveform.print ~display_rules ~wave_width:4 ~display_width:90
+    ~display_height:5 waves;
+  [%expect
+    {|
+    ┌Signals───────────┐┌Waves───────────────────────────────────────────────────────────────┐
+    │                  ││──────────┬─────────                                                │
+    │forward_data      ││ 00000001 │00000003                                                 │
+    │                  ││──────────┴─────────                                                │
     └──────────────────┘└────────────────────────────────────────────────────────────────────┘ |}]

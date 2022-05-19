@@ -17,8 +17,8 @@ end
 
 let circuit_impl (_scope : Scope.t) (input : _ I.t) =
   let lw_in_execute = input.e_sel_mem_for_reg_data in
-  let forward_from_execute = ((input.rs ==: input.e_dest) |: (input.rt ==: input.e_dest)) in
-  let stall_pc = lw_in_execute &: forward_from_execute in
+  let uses_execute_output = ((input.rs ==: input.e_dest) |: (input.rt ==: input.e_dest)) in
+  let stall_pc = lw_in_execute &: uses_execute_output in
 
   { O.stall_pc }
 
