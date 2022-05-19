@@ -5,8 +5,6 @@ module I = Hardcaml_arty.User_application.I
 
 module O = struct
   type 'a t = {
-    led_4bits : 'a; [@bits 4]
-    led_rgb : 'a UA.Led_rgb.t list; [@length 4] [@rtlprefix "led_rgb_"]
     uart_tx : 'a Hardcaml_arty.Uart.Byte_with_valid.t; [@rtlprefix "uart_tx_"]
     ethernet : 'a UA.Ethernet.O.t; [@rtlprefix "eth_"]
     writeback_data : 'a; [@bits 32]
@@ -15,13 +13,7 @@ module O = struct
   [@@deriving sexp_of, hardcaml]
 end
 
-let rgb_off =
-  {
-    Hardcaml_arty.User_application.Led_rgb.r = of_bool false;
-    g = of_bool false;
-    b = of_bool false;
-  }
-
+let uart_addr = "32'hFFFFFFFE"
 let delay_test_addr = "32'hFFFFFFFF"
 
 let circuit_impl program scope (input : t I.t) =
@@ -31,6 +23,23 @@ let circuit_impl program scope (input : t I.t) =
     Datapath.hierarchical program scope
       { Datapath.I.clock = input.clk_166; read_data; io_busy }
   in
+
+  let using_uart_read = datapath.read_addr ==: of_string uart_addr in
+  let using_uart_write = datapath.write_addr ==: of_string uart_addr in
+  let uart =
+    Uart.hierarchical scope
+      {
+        Uart.I.clock = input.clk_166;
+        write_enable = using_uart_write &: datapath.write_enable;
+        write_addr = datapath.write_addr;
+        write_data = datapath.write_data;
+        read_enable = using_uart_read &: datapath.read_enable;
+        read_addr = datapath.read_addr;
+        uart_rx = input.uart_rx;
+      }
+  in
+  let uart_busy = using_uart_read |: using_uart_write &: uart.io_busy in
+  let uart_read = Signal.sresize using_uart_read 32 &: uart.read_data in
 
   let using_delay_test_read =
     datapath.read_addr ==: of_string delay_test_addr
@@ -42,7 +51,7 @@ let circuit_impl program scope (input : t I.t) =
     Delay_test_io.hierarchical scope
       {
         Delay_test_io.I.clock = input.clk_166;
-        write_enable = datapath.write_enable;
+        write_enable = using_delay_test_write &: datapath.write_enable;
         write_addr = datapath.write_addr;
         write_data = datapath.write_data;
         read_enable = using_delay_test_read &: datapath.read_enable;
@@ -52,10 +61,12 @@ let circuit_impl program scope (input : t I.t) =
   let delay_test_io_busy =
     using_delay_test_read |: using_delay_test_write &: delay_test_io.io_busy
   in
-  let delay_test_read = (Signal.sresize using_delay_test_read 32) &: delay_test_io.read_data in
+  let delay_test_read =
+    Signal.sresize using_delay_test_read 32 &: delay_test_io.read_data
+  in
 
-  let using_memory_read = ~:using_delay_test_read in
-  let using_memory_write = ~:using_delay_test_write in
+  let using_memory_read = ~:using_delay_test_read &: ~:using_uart_read in
+  let using_memory_write = ~:using_delay_test_write &: ~:using_uart_write in
   let memory =
     Memory.hierarchical scope
       {
@@ -68,16 +79,14 @@ let circuit_impl program scope (input : t I.t) =
       }
   in
   let memory_busy = using_memory_read |: using_memory_write &: memory.io_busy in
-  let memory_read = (Signal.sresize using_memory_read 32) &: memory.read_data in
+  let memory_read = Signal.sresize using_memory_read 32 &: memory.read_data in
 
-  read_data <== (delay_test_read |: memory_read);
-  io_busy <== (delay_test_io_busy |: memory_busy);
+  read_data <== (delay_test_read |: memory_read |: uart_read);
+  io_busy <== (delay_test_io_busy |: memory_busy |: uart_busy);
 
   {
-    O.led_4bits = of_string "4'b0000";
-    uart_tx = input.uart_rx;
-    led_rgb = [ rgb_off; rgb_off; rgb_off; rgb_off ];
-    ethernet = Hardcaml_arty.User_application.Ethernet.O.unused (module Signal);
+    O.ethernet = Hardcaml_arty.User_application.Ethernet.O.unused (module Signal);
+    uart_tx = uart.uart_tx;
     writeback_data = datapath.writeback_data;
     writeback_pc = datapath.writeback_pc;
   }

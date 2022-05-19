@@ -38,15 +38,20 @@ let regfile rs rt clock write_enable write_address write_data =
     multiport_memory number_of_regs ~write_ports:[| write_port |]
       ~read_addresses:[| rs; rt |]
   in
-  let alu_a = 
-      mux2 (write_enable &: (write_address ==: rs)) write_data regs.(0) in
-  let alu_b = 
-      mux2 (write_enable &: (write_address ==: rt)) write_data regs.(1) in
- 
+  let alu_a =
+    mux2 (write_enable &: (write_address ==: rs)) write_data regs.(0)
+  in
+  let alu_b =
+    mux2 (write_enable &: (write_address ==: rt)) write_data regs.(1)
+  in
+
   (alu_a, alu_b)
 
-let stall_signals scope (sigs: _ Control_unit.Control_signals.t) rs rt e_dest e_sel_mem_for_reg_data =
-  let stall_unit = Stall_unit.hierarchical scope {rs; rt; e_dest; e_sel_mem_for_reg_data} in
+let stall_signals scope (sigs : _ Control_unit.Control_signals.t) rs rt e_dest
+    e_sel_mem_for_reg_data =
+  let stall_unit =
+    Stall_unit.hierarchical scope { rs; rt; e_dest; e_sel_mem_for_reg_data }
+  in
   let stall_pc = stall_unit.stall_pc in
   {
     sigs with
@@ -79,6 +84,13 @@ let circuit_impl (scope : Scope.t) (input : _ I.t) =
   let e_reg_write_enable = reg ~enable r wreg in
   let m_reg_write_enable = pipeline ~n:2 ~enable r wreg in
 
+  let full_control_signals =
+    stall_signals scope control_unit.control_signals parsed.rs parsed.rt e_dest
+      e_sel_mem_for_reg_data
+  in
+
+  let e_stalled = reg ~enable r full_control_signals.stall_pc in
+
   let forwarding_unit_inputs reg reg_value =
     {
       Forwarding_unit.I.options =
@@ -94,6 +106,7 @@ let circuit_impl (scope : Scope.t) (input : _ I.t) =
           m_sel_mem_for_reg_data;
           e_reg_write_enable;
           m_reg_write_enable;
+          e_stalled;
         };
       source = reg;
       e_dest;
@@ -114,11 +127,9 @@ let circuit_impl (scope : Scope.t) (input : _ I.t) =
 
   let alu_a = check_zero_reg parsed.rs fwd_a.forward_data in
   let alu_b = check_zero_reg parsed.rt fwd_b.forward_data in
-  
-  let control_signals = stall_signals scope control_unit.control_signals parsed.rs parsed.rt e_dest e_sel_mem_for_reg_data in
 
   {
-    O.control_signals;
+    O.control_signals = full_control_signals;
     alu_a;
     alu_b;
     rdest = parsed.rdest;
