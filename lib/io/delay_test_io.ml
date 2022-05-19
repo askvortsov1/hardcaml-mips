@@ -4,7 +4,7 @@ open Hardcaml.Signal
 (* Sample config for testing. *)
 let sample_read_delay = 2
 let sample_write_delay = 4
-let sample_read_data = of_int ~width:32 5
+let sample_read_data = of_int ~width:32 30
 
 module I = struct
   type 'a t = {
