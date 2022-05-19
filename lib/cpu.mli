@@ -4,8 +4,6 @@ module I = Hardcaml_arty.User_application.I
 
 module O : sig
   type 'a t = {
-    led_4bits : 'a;
-    led_rgb : 'a Hardcaml_arty.User_application.Led_rgb.t list;
     uart_tx : 'a Hardcaml_arty.Uart.Byte_with_valid.t;
     ethernet : 'a Hardcaml_arty.User_application.Ethernet.O.t;
     writeback_data : 'a;
